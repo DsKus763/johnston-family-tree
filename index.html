@@ -1,0 +1,2878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Johnston Family Tree</title>
+<style>
+  :root{
+    --ink:#2b2620; --ink-soft:#6b6255; --paper:#f7f3ea; --card:#fffdf8;
+    --edge:#bfae8d; --gold:#c9a227; --male:#7fa3c7; --female:#d29aac;
+    --ok:#3d9d63; --likely:#d9a33c; --unver:#c05c5c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%; overflow:hidden}
+  html{min-height:680px}
+  body{background:var(--paper); color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  /* ---------- header ---------- */
+  #hdr{position:fixed; top:0; left:0; right:0; height:66px; z-index:30;
+       display:flex; align-items:center; gap:14px; padding:0 16px;
+       background:linear-gradient(#f2ecdd,#eee7d5); border-bottom:1px solid #d9cfB6;
+       box-shadow:0 1px 6px rgba(60,50,30,.12);}
+  #hdr h1{font-family:Georgia,'Times New Roman',serif; font-size:19px; letter-spacing:.4px; white-space:nowrap;}
+  #hdr .sub{font-size:11px; color:var(--ink-soft); white-space:nowrap;}
+  #hdr .spacer{flex:1}
+  .ctl{display:flex; align-items:center; gap:6px}
+  .btn{border:1px solid #cbbf9f; background:#fbf8ef; color:var(--ink); border-radius:7px;
+       padding:5px 10px; font-size:12px; cursor:pointer; user-select:none;}
+  .btn:hover{background:#f1e9d4}
+  .btn.on{background:var(--gold); border-color:#a8871e; color:#fff; font-weight:600}
+  #search{border:1px solid #cbbf9f; background:#fffdf7; border-radius:7px; padding:5px 9px;
+          font-size:12px; width:170px; outline:none;}
+  #search:focus{border-color:var(--gold)}
+  #matchCt{font-size:11px; color:var(--ink-soft); min-width:34px}
+  /* ---------- canvas ---------- */
+  #wrap{position:fixed; top:66px; left:0; right:0; bottom:0;}
+  svg{display:block; width:100%; height:100%; cursor:grab; touch-action:none; -webkit-user-select:none; user-select:none;}
+  svg.panning{cursor:grabbing}
+  #gutter{position:fixed; top:66px; left:0; bottom:0; width:150px; z-index:10; pointer-events:none;
+          border-right:1px dashed #d9cfb6; background:linear-gradient(90deg,#f4efe1 70%,rgba(244,239,225,0));}
+  .genlab{position:absolute; left:10px; width:130px; font-size:10.5px; color:#8a7d63;
+          text-transform:uppercase; letter-spacing:.5px; line-height:1.35;}
+  .genlab b{display:block; font-size:11px; color:#6d6249;}
+  /* ---------- legend ---------- */
+  #legend{position:fixed; left:10px; bottom:10px; z-index:20; background:rgba(255,253,248,.92);
+          border:1px solid #d9cfb6; border-radius:9px; padding:9px 12px; font-size:11px;
+          color:var(--ink-soft); line-height:1.7; box-shadow:0 1px 5px rgba(60,50,30,.1);}
+  #legend .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin:0 4px 0 0; vertical-align:-1px;}
+  #legend .sw{display:inline-block; width:14px; height:3px; border-radius:2px; margin:0 4px 0 0; vertical-align:3px;}
+  #legend .dash{border-top:2px dashed var(--likely); height:0; margin-top:5px;}
+  /* ---------- detail panel ---------- */
+  #panel{position:fixed; top:66px; right:0; bottom:0; width:360px; z-index:25; background:var(--card);
+         border-left:1px solid #d9cfb6; box-shadow:-2px 0 10px rgba(60,50,30,.12);
+         transform:translateX(380px); transition:transform .22s ease; display:flex; flex-direction:column;}
+  #panel.open{transform:none}
+  #panel .phead{padding:14px 16px 10px; border-bottom:1px solid #e4dcc6; position:relative;}
+  #panel h2{font-family:Georgia,serif; font-size:17px; line-height:1.25; padding-right:26px;}
+  #panel .pid{position:absolute; top:14px; right:40px; font-size:10px; color:#a2946f;}
+  #pclose{position:absolute; top:10px; right:10px; border:none; background:none; font-size:17px;
+          cursor:pointer; color:var(--ink-soft); padding:4px;}
+  #panel .pbody{overflow-y:auto; padding:12px 16px 20px; font-size:12.5px; line-height:1.5;}
+  .confpill{display:inline-block; font-size:10.5px; font-weight:700; color:#fff; border-radius:20px;
+            padding:2px 9px; margin-top:6px;}
+  .prow{display:flex; gap:8px; padding:5px 0; border-bottom:1px dotted #e7dfc9;}
+  .prow .k{flex:0 0 96px; color:#8a7d63; font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding-top:1px;}
+  .prow .v{flex:1}
+  .psec{margin:12px 0 4px; font-size:11px; font-weight:700; color:#8a7d63; text-transform:uppercase; letter-spacing:.6px;}
+  .chip{display:inline-block; border:1px solid #cbbf9f; background:#fbf8ef; border-radius:14px;
+        padding:3px 10px; margin:2px 3px 2px 0; font-size:11.5px; cursor:pointer;}
+  .chip:hover{background:#f1e9d4; border-color:var(--gold)}
+  .warn{background:#fdf3e0; border:1px solid #e8cf96; border-radius:8px; padding:8px 10px; margin-top:8px; font-size:11.5px;}
+  .src{color:#57503f; font-size:11.5px;}
+  /* ---------- svg nodes ---------- */
+  .pcard{cursor:pointer}
+  .pcard rect.body{fill:var(--card); stroke-width:1.4; filter:drop-shadow(0 1px 1.5px rgba(60,50,30,.18));}
+  .pcard.m rect.body{stroke:var(--male)} .pcard.f rect.body{stroke:var(--female)}
+  .pcard.subject rect.body{stroke:var(--gold); stroke-width:2.6}
+  .pcard text{pointer-events:none}
+  .pname{font-family:Georgia,serif; font-weight:700; font-size:12px; fill:var(--ink)}
+  .pmeta{font-size:10px; fill:var(--ink-soft)}
+  .pbadge{font-size:9.5px; fill:#8a6d2f; font-style:italic}
+  .mlink{font-size:10px; fill:#8a7d63; font-style:italic}
+  .edge{stroke:var(--edge); stroke-width:1.6; fill:none}
+  .edge.flag{stroke:var(--likely); stroke-dasharray:5 4; stroke-width:1.8}
+  .tog{cursor:pointer}
+  .tog circle{fill:#fbf8ef; stroke:#a2946f; stroke-width:1.3}
+  .tog text{font-size:11px; font-weight:700; fill:#6d6249; text-anchor:middle; pointer-events:none}
+  .tog .cnt{font-size:8px; fill:#8a7d63}
+  .hl .dim{opacity:.13}
+  .hl .edge{opacity:.13}
+  .hl .edge.keep{opacity:1; stroke:var(--gold)}
+  .hl .keepnode{opacity:1}
+  .match rect.body{stroke:var(--gold) !important; stroke-width:2.6 !important}
+  #hint{position:fixed; right:12px; bottom:10px; z-index:15; font-size:10.5px; color:#a2946f;}
+  @media (max-width:900px){ #hdr .sub{display:none} #gutter{display:none} }
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div>
+    <h1>The Johnston Family Tree</h1>
+    <div class="sub" id="subline"></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="ctl">
+    <input id="search" placeholder="Search a name…  ( / )">
+    <span id="matchCt"></span>
+  </div>
+  <div class="ctl">
+    <button class="btn" id="btnLine">★ Alfred’s line</button>
+    <button class="btn" id="btnExpand">Expand all</button>
+    <button class="btn" id="btnCollapse">Collapse all</button>
+  </div>
+  <div class="ctl">
+    <button class="btn" id="zoomOut">−</button>
+    <button class="btn" id="zoomIn">+</button>
+    <button class="btn" id="fit">⤢ Fit</button>
+  </div>
+</div>
+
+<div id="gutter"></div>
+<div id="wrap"><svg id="svg"><g id="vp"></g></svg></div>
+
+<div id="legend">
+  <b style="color:var(--ink)">How to read</b><br>
+  <span class="sw" style="background:var(--male)"></span>male&nbsp;&nbsp;<span class="sw" style="background:var(--female)"></span>female&nbsp;&nbsp;<span class="sw" style="background:var(--gold)"></span>subject line<br>
+  <span class="dot" style="background:var(--ok)"></span>verified&nbsp;&nbsp;<span class="dot" style="background:var(--likely)"></span>likely&nbsp;&nbsp;<span class="dot" style="background:var(--unver)"></span>unverified<br>
+  <span class="sw dash" style="background:none"></span>dashed = unproven parentage&nbsp;&nbsp;·&nbsp;&nbsp;⊟ on a junction = collapse branch<br>
+  Click any person for full facts &amp; sources · scroll to zoom · drag to pan
+</div>
+<div id="hint">Built 29 Sep 2026 from Johnston_Family_Tree_v2.xlsx · 64 people · 8 generations</div>
+
+<div id="panel">
+  <div class="phead">
+    <h2 id="pname"></h2><span class="pid" id="ppid"></span>
+    <button id="pclose">✕</button>
+    <div id="pconf"></div>
+  </div>
+  <div class="pbody" id="pbody"></div>
+</div>
+
+<script>
+const DATA = {
+ "people": {
+  "P01": {
+   "id": "P01",
+   "name": "Darren Peter Johnston",
+   "fullName": "Darren Peter Johnston",
+   "gen": -1,
+   "sex": "M",
+   "bornShort": "07 Jun 1973",
+   "diedShort": "",
+   "placeShort": "Camperdown NSW",
+   "diedPlaceShort": "",
+   "father": "Peter Allan Johnston",
+   "mother": "Madelaine Annette Maher",
+   "born": "07 Jun 1973",
+   "birthPlace": "Camperdown NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Amy Yuet-Li Kok",
+   "mDate": "26 Jul 2014",
+   "mPlace": "Darling Harbour NSW",
+   "sources": "Tree; Astro chart (natal chart 'EDj', born Sydney 7 Jun 1973 \u2014 Thursday, matches)",
+   "confidence": "Verified",
+   "notes": "The astrology PDF in your files is Darren's natal chart.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P02": {
+   "id": "P02",
+   "name": "Nicole Ann Johnston",
+   "fullName": "Nicole Ann Johnston",
+   "gen": -1,
+   "sex": "F",
+   "bornShort": "11 May 1970",
+   "diedShort": "",
+   "placeShort": "Camperdown NSW",
+   "diedPlaceShort": "",
+   "father": "Peter Allan Johnston",
+   "mother": "Madelaine Annette Maher",
+   "born": "11 May 1970",
+   "birthPlace": "Camperdown NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Scott Andrew Bartlett",
+   "mDate": "27 Feb 2009",
+   "mPlace": "Eschols Park NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Married Scott Bartlett 2009 (tree shows 'Eschols Park').",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P03": {
+   "id": "P03",
+   "name": "Blake Cameron Schonberger",
+   "fullName": "Blake Cameron Schonberger",
+   "gen": -2,
+   "sex": "M",
+   "bornShort": "21 May 1999",
+   "diedShort": "",
+   "placeShort": "Ballarat VIC",
+   "diedPlaceShort": "",
+   "father": "? (Schonberger)",
+   "mother": "Nicole Ann Johnston",
+   "born": "21 May 1999",
+   "birthPlace": "Ballarat VIC",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Nicole's son \u2014 born before her 2009 Bartlett marriage.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P04": {
+   "id": "P04",
+   "name": "Mihkayla Ann Schonberger",
+   "fullName": "Mihkayla Ann Schonberger",
+   "gen": -2,
+   "sex": "F",
+   "bornShort": "01 Oct 2001",
+   "diedShort": "",
+   "placeShort": "Ballarat VIC",
+   "diedPlaceShort": "",
+   "father": "? (Schonberger)",
+   "mother": "Nicole Ann Johnston",
+   "born": "01 Oct 2001",
+   "birthPlace": "Ballarat VIC",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Nicole's daughter per tree placement.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P05": {
+   "id": "P05",
+   "name": "Samantha Grace Bartlett",
+   "fullName": "Samantha Grace Bartlett",
+   "gen": -2,
+   "sex": "F",
+   "bornShort": "11 Apr 2013",
+   "diedShort": "",
+   "placeShort": "Liverpool NSW",
+   "diedPlaceShort": "",
+   "father": "Scott Andrew Bartlett",
+   "mother": "Nicole Ann Johnston (likely)",
+   "born": "11 Apr 2013",
+   "birthPlace": "Liverpool NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree",
+   "confidence": "Unverified",
+   "notes": "Tree placement implies Scott Bartlett's daughter; mother assumed Nicole \u2014 confirm with family.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P06": {
+   "id": "P06",
+   "name": "Alfred Henry JOHNSTON",
+   "fullName": "Alfred Henry JOHNSTON",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "17 Mar 1910",
+   "diedShort": "09 Feb 1999",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "Buff Point NSW",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "17 Mar 1910",
+   "birthPlace": "Junee NSW",
+   "died": "09 Feb 1999",
+   "deathPlace": "Buff Point NSW",
+   "age": 88,
+   "burial": "Central Coast (Palmdale-area; no public record \u2014 see notes)",
+   "occupation": "Butcher's son; informant on mother's 1960 death cert (136 Livingstone Rd, Marrickville)",
+   "bdm": "",
+   "marriedTo": "Eunice Fantom",
+   "mDate": "25 Apr 1942",
+   "mPlace": "Marrickville NSW",
+   "sources": "Tree; Birth Chart p2; Cemeteries Index (parents); 1960 death cert (informant); 1942 SMH notice; 2010 Eunice obituary ('wife of Alfred (deceased)')",
+   "confidence": "Verified",
+   "notes": "THE SUBJECT. 'Alfred H. 50' in mother's 1960 death cert \u2014 exact age match. Living at 136 Livingstone Rd Marrickville in 1960. Confirmed deceased before Nov 2010 by Eunice's obituary. Exact 1999 death/burial record not publicly findable (Palmdale has no public deceased search; NSW BDM index closed after 1995) \u2014 the tree's 9 Feb 1999 Buff Point stands as the family record.",
+   "conflicts": [
+    7
+   ],
+   "badge": "",
+   "subject": true
+  },
+  "P07": {
+   "id": "P07",
+   "name": "Edward J Johnston",
+   "fullName": "Edward J Johnston",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "c.1914-15",
+   "diedShort": "1930",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "Sydney NSW",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "~1914-15 (inferred)",
+   "birthPlace": "Junee NSW (likely)",
+   "died": "1930",
+   "deathPlace": "Sydney NSW",
+   "age": "~15",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree (d.1930 Sydney); 1960 death cert ('Edward J. deceased'); Cemeteries Index (child 'Edward')",
+   "confidence": "Likely",
+   "notes": "Birth year inferred from issue order on 1960 cert (between Arthur b.1912 and Leslie b.1917). Died young.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P08": {
+   "id": "P08",
+   "name": "Queenie Elizabeth Ellen Johnston",
+   "fullName": "Queenie Elizabeth Ellen Johnston",
+   "gen": 0,
+   "sex": "F",
+   "bornShort": "18 Jun 1899",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "18 Jun 1899",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Mr Scott",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; 1942 SMH notice ('Queen (Mrs. Scott)'); 1960 cert ('Queenie 61')",
+   "confidence": "Verified",
+   "notes": "First child, born 6 months after parents' marriage. 'Queenie 61' on 1960 cert \u2014 exact match.",
+   "conflicts": [],
+   "badge": "m. \u2014 Scott",
+   "subject": false
+  },
+  "P09": {
+   "id": "P09",
+   "name": "Ivy May Johnston",
+   "fullName": "Ivy May Johnston",
+   "gen": 0,
+   "sex": "F",
+   "bornShort": "20 Aug 1903",
+   "diedShort": "bef. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "20 Aug 1903",
+   "birthPlace": "Junee NSW",
+   "died": "before 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; Cemeteries Index; 1960 cert ('Ivy M. deceased')",
+   "confidence": "Verified",
+   "notes": "Died before 1960 (not in 1942 notice either \u2014 deceased by then).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P10": {
+   "id": "P10",
+   "name": "Sydney Ernest Johnston",
+   "fullName": "Sydney Ernest Johnston",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "19 Jan 1905",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "19 Jan 1905",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; 1942 SMH notice; 1960 cert ('Sidney E. 55')",
+   "confidence": "Verified",
+   "notes": "Spellings vary: Sydney/Sidney, Earnest/Ernest. First named child in 1942 notice.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P11": {
+   "id": "P11",
+   "name": "George Reginald Johnston",
+   "fullName": "George Reginald Johnston",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "31 Jan 1908",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "31 Jan 1908",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; 1942 SMH notice; 1960 cert ('George 52')",
+   "confidence": "Verified",
+   "notes": "Tree spells 'Regnold', typed chart 'Reginald' \u2014 Reginald is correct.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P12": {
+   "id": "P12",
+   "name": "Arthur John Johnston",
+   "fullName": "Arthur John Johnston",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "18 Jun 1912",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "18 Jun 1912",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; Cemeteries Index; 1960 cert ('Arthur J. 48')",
+   "confidence": "Verified",
+   "notes": "Not named in 1942 death notice \u2014 possibly away at war. The 1946 Newcastle 'A. Johnston n\u00e9e Helen Fantom' birth notice is NOT him \u2014 Helen Fantom married Alex Charles Johnston of Merewether (different family).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P13": {
+   "id": "P13",
+   "name": "Frederick John Johnston",
+   "fullName": "Frederick John Johnston",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "26 Dec 1914",
+   "diedShort": "aft. 1942",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "26 Dec 1914",
+   "birthPlace": "Junee NSW (likely)",
+   "died": "after 1942",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; 1942 SMH notice ('Jack')",
+   "confidence": "Likely",
+   "notes": "Called 'Jack' in 1942 notice. CONFLICT: Hillston cemetery inscription lists a child 'Peter' between Queenie and Ivy \u2014 possibly this child recorded as Peter Frederick John, or a separate short-lived child. Missing from 1960 death cert issue list. See Conflicts sheet.",
+   "conflicts": [
+    3
+   ],
+   "badge": "'Jack' in 1942 notice",
+   "subject": false
+  },
+  "P14": {
+   "id": "P14",
+   "name": "Leslie Harold Johnston",
+   "fullName": "Leslie Harold Johnston",
+   "gen": 0,
+   "sex": "M",
+   "bornShort": "17/18 Nov 1917",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "17/18 Nov 1917",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; 1942 SMH notice ('Les'); 1960 cert ('Leslie H. 42')",
+   "confidence": "Verified",
+   "notes": "Tree spells 'Lesley', chart 'Leslie'. Cert age 42 in Sep 1960 \u2192 b. Nov 1917 \u2713.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P15": {
+   "id": "P15",
+   "name": "Ida Jean Johnston",
+   "fullName": "Ida Jean Johnston",
+   "gen": 0,
+   "sex": "F",
+   "bornShort": "25 Nov 1920",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "25 Nov 1920",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2 ('23 Nov 1920' \u2014 2-day discrepancy); Cemeteries Index; 1960 cert ('Ida J. 39')",
+   "confidence": "Verified",
+   "notes": "Tree says 25 Nov, typed chart 23 Nov 1920.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P16": {
+   "id": "P16",
+   "name": "Grace Lillian Johnston",
+   "fullName": "Grace Lillian Johnston",
+   "gen": 0,
+   "sex": "F",
+   "bornShort": "25 Jul 1923",
+   "diedShort": "aft. 1960",
+   "placeShort": "Junee NSW",
+   "diedPlaceShort": "",
+   "father": "Peter William Alexander Johnston",
+   "mother": "Letitia Sarah Field",
+   "born": "25 Jul 1923",
+   "birthPlace": "Junee NSW",
+   "died": "after 1960",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "Tree; Birth Chart p2; 1960 cert ('Grace L. 37'); NSW BDM extract cert (your file: reg P 80659/79, b. 25 Jul 1923 Junee)",
+   "confidence": "Verified",
+   "notes": "The birth certificate extract in your files confirms her directly \u2014 youngest child.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P17": {
+   "id": "P17",
+   "name": "Eunice FANTOM",
+   "fullName": "Eunice FANTOM",
+   "gen": 0,
+   "sex": "F",
+   "bornShort": "c.1918 (aged 92 at death)",
+   "diedShort": "06 Nov 2010",
+   "placeShort": "Australia",
+   "diedPlaceShort": "",
+   "father": "? (Fantom \u2014 likely Herbert Fantom & Sarah King, unproven)",
+   "mother": "",
+   "born": "~1918 (aged 92 at death)",
+   "birthPlace": "Australia (likely NSW \u2014 unverified)",
+   "died": "06 Nov 2010",
+   "deathPlace": "",
+   "age": "",
+   "burial": "Rose Chapel, Palmdale Lawn Cemetery, 12 Nov 2010 (funeral service)",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Alfred Henry Johnston",
+   "mDate": "25 Apr 1942",
+   "mPlace": "Marrickville NSW",
+   "sources": "Tree; 2010 obituary (Legacy, 10 Nov 2010)",
+   "confidence": "Verified",
+   "notes": "VERIFIED via obituary: 'JOHNSTON, Eunice. Aged 92 years. Passed away peacefully. Loving wife of Alfred (deceased). Much loved mother of Peter and Sue. Proud Nan to all her grandchildren and great grandchildren.' Funeral 12 Nov 2010, Rose Chapel, Palmdale; Creightons Funeral Service, Central Coast. Birth year ~1918. Parentage still unproven \u2014 Newcastle Fantom family remains likely.",
+   "conflicts": [
+    6
+   ],
+   "badge": "",
+   "subject": false
+  },
+  "P18": {
+   "id": "P18",
+   "name": "Peter William Alexander JOHNSTON",
+   "fullName": "Peter William Alexander JOHNSTON",
+   "gen": 1,
+   "sex": "M",
+   "bornShort": "24 Jul 1873",
+   "diedShort": "20 Mar 1942",
+   "placeShort": "Hay NSW",
+   "diedPlaceShort": "Marrickville District Hospital",
+   "father": "Peter Johnston",
+   "mother": "Ellen Laird",
+   "born": "24 Jul 1873",
+   "birthPlace": "Hay NSW (reg 11988/1873)",
+   "died": "20 Mar 1942",
+   "deathPlace": "Marrickville District Hospital (8 Newington Rd, Marrickville)",
+   "age": 68,
+   "burial": "Rookwood Crematorium, 21 Mar 1942",
+   "occupation": "Butcher",
+   "bdm": "7933/1898",
+   "marriedTo": "Letitia Sarah Field",
+   "mDate": "11 Dec 1898",
+   "mPlace": "St Luke's Vicarage, Junee (C of E)",
+   "sources": "Cemeteries Index Hillston inscription (full dates + reg nos); 1898 marriage register (your file: butcher, 25, Junee, b. Darlington Point); 1942 SMH notice; 1960 death cert ('Peter William Alexander Johnston'); Tree; Birth Chart p2",
+   "confidence": "Verified",
+   "notes": "Death notice SMH 21 Mar 1942: 'late of Marrickville, Junee and Hillston'. Your marriage1.pdf IS his marriage \u2014 entry 144: groom 25 (exact age match), butcher (matches), b. Darlington Point (matches tree). Register lists his father as 'Philip Johnston, labourer' \u2014 almost certainly misread/miswritten for Peter Johnston (see Conflicts).",
+   "conflicts": [
+    1,
+    11
+   ],
+   "badge": "",
+   "subject": false
+  },
+  "P19": {
+   "id": "P19",
+   "name": "Letitia Sarah FIELD",
+   "fullName": "Letitia Sarah FIELD",
+   "gen": 1,
+   "sex": "F",
+   "bornShort": "19 Apr 1881",
+   "diedShort": "07 Sep 1960",
+   "placeShort": "Gundagai NSW",
+   "diedPlaceShort": "8 Newington Rd",
+   "father": "Alfred Field",
+   "mother": "Elizabeth Manton",
+   "born": "19 Apr 1881",
+   "birthPlace": "Gundagai NSW (reg 16466/1881)",
+   "died": "07 Sep 1960",
+   "deathPlace": "8 Newington Rd, Marrickville NSW",
+   "age": 79,
+   "burial": "Rookwood Crematorium, 9 Sep 1960",
+   "occupation": "Married at 17 (cert says 16)",
+   "bdm": "7933/1898",
+   "marriedTo": "Peter William Alexander Johnston",
+   "mDate": "11 Dec 1898",
+   "mPlace": "St Luke's Vicarage, Junee",
+   "sources": "Birth cert extract 16466/1881 (your file); Death cert 1960 (your file: No 101993, Marrickville reg 700, informant son A. H. Johnston); 1898 marriage register (b. Muttama \u2014 matches tree 'Gundagai/Muttama'); Cemeteries Index; Tree; Birth Chart p2",
+   "confidence": "Verified",
+   "notes": "'Lettie' in 1942 notice. Death cert issue list matches the 10 children with ages. Cert records her father as 'Erne Field' \u2014 informant error for Alfred Field (see Conflicts). Mother blank on cert.",
+   "conflicts": [
+    2,
+    4
+   ],
+   "badge": "",
+   "subject": false
+  },
+  "P20": {
+   "id": "P20",
+   "name": "James Henry Maher",
+   "fullName": "James Henry Maher",
+   "gen": 1,
+   "sex": "M",
+   "bornShort": "21 Aug 1913",
+   "diedShort": "14 Oct 1974",
+   "placeShort": "Bundarra NSW",
+   "diedPlaceShort": "Bundarra NSW",
+   "father": "?",
+   "mother": "?",
+   "born": "21 Aug 1913",
+   "birthPlace": "Bundarra NSW",
+   "died": "14 Oct 1974",
+   "deathPlace": "Bundarra NSW",
+   "age": 61,
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Vera Jean (surname unknown)",
+   "mDate": "21 Oct 1940",
+   "mPlace": "Bundarra NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Father of Madelaine & Peter Ross Maher. Facebook family-history post confirms 'James Henry Maher born in Bundarra in 1913 who became Post Master General in Leichhardt'.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P21": {
+   "id": "P21",
+   "name": "Vera Jean Maher (n\u00e9e ?)",
+   "fullName": "Vera Jean Maher (n\u00e9e ?)",
+   "gen": 1,
+   "sex": "F",
+   "bornShort": "18 Jun 1916",
+   "diedShort": "20 Feb 2001",
+   "placeShort": "Bundarra NSW",
+   "diedPlaceShort": "Georges Hall NSW",
+   "father": "?",
+   "mother": "?",
+   "born": "18 Jun 1916",
+   "birthPlace": "Bundarra NSW",
+   "died": "20 Feb 2001",
+   "deathPlace": "Georges Hall NSW",
+   "age": 84,
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "James Henry Maher",
+   "mDate": "21 Oct 1940",
+   "mPlace": "Bundarra NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Maiden name unknown \u2014 shown only as 'Vera Jean Maher' in tree. NSW BDM marriage search Maher+Vera ~1940 Bundarra will give it.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P22": {
+   "id": "P22",
+   "name": "Peter William JOHNSTON (JOHNSON)",
+   "fullName": "Peter William JOHNSTON (JOHNSON)",
+   "gen": 2,
+   "sex": "M",
+   "bornShort": "02 Jul 1837 (OPR baptism, Northmavine)",
+   "diedShort": "? (after 1873; family later Hay NSW)",
+   "placeShort": "Shetland",
+   "diedPlaceShort": "?",
+   "father": "John JOHNSON (P44) b. 1806 Vidifield",
+   "mother": "Jane Johnson GANSON (P45) b. 1812 Laxfirth, Nesting",
+   "born": "02 Jul 1837 (OPR baptism, Northmavine)",
+   "birthPlace": "Shetland, Lerwick, Scotland",
+   "died": "? (after 1873; family later Hay NSW)",
+   "deathPlace": "?",
+   "age": "",
+   "burial": "",
+   "occupation": "General Servant (1858 cert); 'Shipwright/harbour labourer' per family tree later",
+   "bdm": "VIC 720673/1858; OPR Shetland 008/20/51 (bapt 2 Jul 1837)",
+   "marriedTo": "Ellen Laird",
+   "mDate": "22 Mar 1858",
+   "mPlace": "Green Plains, Navarre, Wimmera district, VIC",
+   "sources": "1858 cert; OPR baptism 008/20/51 (John Johnson/Jean Ganson); 1841 census Hillswick; 1851 census Northmavine 008/3/8 age 14 (servant)",
+   "confidence": "Verified",
+   "notes": "OPR baptism: PETER, s/o JOHN JOHNSON/JEAN GANSON, b. 2 Jul 1837, Northmavine (008/20/51). 1851 census: age 14, ref 008/3/8, separate book from parents (living out as servant \u2014 consistent with later 'General Servant'). 1841 census age 4 = exact. Certificate mother 'Jane [Gaunson]' confirms.\n\nBAYANNE I9921 sibling list: 'Peter William JOHNSON, b. 27 May 1837, Stucka, near Hillswick; d. UNKNOWN' \u2014 the only sibling whose death is unknown = OUR EMIGRANT PETER (left for Australia 1857/58; VIC marriage 22 Mar 1858 Green Plains, Navarre). 27 May 1837 (bayanne) vs 2 Jul 1837 (OPR baptism 008/20/51): likely birth vs baptism date. Middle name WILLIAM newly recorded \u2014 possibly honours maternal grandfather William GANSON (if Jean's father was William; naming-pattern inference, verify via Nesting OPR). Siblings (full list, bayanne): Barbara Grace Gifford (1832), Helen Jane (1835, d. bef 1841), Peter William (1837, = P22), Grace (1839, d. 1985 age 96), Andrew (1841, d. 1871), Robert (1843), Laurence (1846), Thomas Gifford (1848), Helen Jane (1850, d. bef 1879).",
+   "conflicts": [
+    8
+   ],
+   "badge": "surname Johnson on 1858 cert",
+   "subject": false
+  },
+  "P23": {
+   "id": "P23",
+   "name": "Ellen LAIRD",
+   "fullName": "Ellen LAIRD",
+   "gen": 2,
+   "sex": "F",
+   "bornShort": "27 Feb 1841, Falkirk (born); baptised 2 May 1841 (OPR 479/110/123, image read)",
+   "diedShort": "",
+   "placeShort": "Falkirk",
+   "diedPlaceShort": "?",
+   "father": "John Laird (Blacksmith)",
+   "mother": "Jane Wilson",
+   "born": "27 Feb 1841, Falkirk (born); baptised 2 May 1841 (OPR 479/110/123, image read)",
+   "birthPlace": "Falkirk, Stirlingshire, Scotland (NOT Edinburgh \u2014 cert reads Falkirk)",
+   "died": "?",
+   "deathPlace": "?",
+   "age": "",
+   "burial": "",
+   "occupation": "Servant (1858 cert)",
+   "bdm": "VIC 720673/1858; OPR Falkirk 479/110/123 (born 27 Feb 1841, baptised 2 May 1841 \u2014 image purchased + read 28 Sep 2026)",
+   "marriedTo": "Peter Johnston",
+   "mDate": "22 Mar 1858",
+   "mPlace": "Green Plains, Navarre, Wimmera district, VIC",
+   "sources": "1858 cert; OPR births (Helen Wilson Laird 1841 Falkirk); 1851 census (Helen Laird, 8, Falkirk 479/24/5); 1861 census (parents John 50 + Jane 46, Falkirk Landward 479/2 1/1)",
+   "confidence": "Verified",
+   "notes": "Register image (read 28 Sep 2026): HELEN WILSON LAIRD born 27 Feb 1841, baptised 2 May 1841, Falkirk, d/o JOHN LAIRD (Blacksmith) & JEAN RUSSELL. Mother = Jean Russell (Conflict #12 resolved). At marriage (22 Mar 1858) she was 17 \u2014 cert says 18 (rounded up). 1851 census: Helen Laird 8, Falkirk 479/24/5 \u2014 ~2 yrs understated vs birth (family-reported age); still the only Helen Laird of the right age/parish in all Scotland.",
+   "conflicts": [
+    12
+   ],
+   "badge": "",
+   "subject": false
+  },
+  "P44": {
+   "id": "P44",
+   "name": "John JOHNSON",
+   "fullName": "John JOHNSON",
+   "gen": "3",
+   "sex": "M",
+   "bornShort": "4 Oct 1806, Vidifield, Northmavine, Shetland",
+   "diedShort": "13 Nov 1884, Cheyne's House, New Town, Lerwick (age 78)",
+   "placeShort": "Vidifield",
+   "diedPlaceShort": "Cheyne's House",
+   "father": "Peter JOHNSON (P48, b. 1781)",
+   "mother": "Grace HENDERSON (P49, b. 1782)",
+   "born": "4 Oct 1806, Vidifield, Northmavine, Shetland",
+   "birthPlace": "Vidifield, Northmavine, Shetland",
+   "died": "13 Nov 1884, Cheyne's House, New Town, Lerwick (age 78)",
+   "deathPlace": "Cheyne's House, New Town, Lerwick, Shetland",
+   "age": "",
+   "burial": "",
+   "occupation": "Crofter, Farm Grieve (per bayanne; Farmer 1841)",
+   "bdm": "OPR Shetland: marriage 008/20/96 (1831); children 008/20/42, /51, /54",
+   "marriedTo": "Jane Taveron",
+   "mDate": "19 Nov 1831 (bayanne; OPR 008/20/96 says 29 Nov \u2014 see Conflict #14)",
+   "mPlace": "Shetland (likely Northmavine)",
+   "sources": "OPR marriage 29 Nov 1831 (Jean Gaunson); children's baptisms 1833/1837/1839; 1841 census Hillswick (Farmer); 1851 census Northmavine 008/2/13",
+   "confidence": "Confirmed (bayanne I9921 = P44: children match OPR exactly)",
+   "notes": "CONFIRMED = bayanne person I9921 (user screenshots 2026-09-28). Person page: John JOHNSON, b. 4 Oct 1806 Vidifield (Vidlin area name variant), Northmavine; also recorded as John Johnston. Censuses: 1841 Hillswick (Farmer, 30); 1851 17 Hangcliff Lane, Lerwick; 1881 Cheynes Cottage, New Town Road, Lerwick. Occupation: Crofter, Farm Grieve. Died 13 Nov 1884 Cheyne's House, New Town, Lerwick, age 78. Person ID I178607 (bayanne), last modified 17 Jun 2020. Parents: Peter JOHNSON (1781, Hillswick \u2014 d. aft 1841) + Grace HENDERSON (1782 Northmavine \u2014 d. 9 Oct 1861 Sound, Lerwick, age 79), m. 1 Dec 1805 Northmavine (F28867). Wife (F24033): Jane Johnson GANSON b. 1 Oct 1812 Laxfirth, Nesting; d. 29 May 1877 New Town, Lerwick (age 64). Marriage 19 Nov 1831 (bayanne) \u2014 OPR 008/20/96 gives 29 Nov 1831 (Conflict #14, trivial variant). FAMILY MOVED TO LERWICK ~1850: children born Lerwick from 1850 \u2014 Helen Jane b. 7 Aug 1850 Lerwick d. bef 1879. THIS RESOLVES THE EMIGRANT-PETER PUZZLE'S CONTEXT: emigrant Peter (P22, b. 1837) left for Australia ~1857 from a LERWICK base, not Northmavine. BAYANNE CHILDREN (vs our OPR list): 1. Barbara Grace Gifford JOHNSON b. 28 Dec 1832 Stucca d. 14 Dec 1914 Lerwick; 2. Andrew JOHNSON b. 1 Oct 1841 Finlans d. 5 Apr 1871 Lower Sound, Lerwick; 3. Helen Jane JOHNSON b. 29 Mar 1835 Stucka d. bef 1841; 4. Peter William JOHNSON b. 27 May 1837 Stucka d. unknown; 5. Grace JOHNSON b. 7 Oct 1839 Stucca d. 24 Oct 1985 41 Burgh Road, Lerwick (age 96!); 6. Robert JOHNSON b. 8 Nov 1843 Finlans d. unknown; 7. Laurence JOHNSON b. 26 Mar 1846 Finlans d. unknown; 8. Thomas Gifford JOHNSON b. 20 May 1848 Snabul d. unknown; 9. Helen Jane JOHNSON b. 7 Aug 1850 Lerwick d. bef 1879. DISCREPANCIES vs OPR: bayanne's marriage date 19 Nov 1831 vs OPR 29 Nov 1831 (trivial); bayanne 9 children vs OPR 3 baptisms \u2014 OPR coverage gaps are normal; bayanne's Barbara Grace birth date 28 Dec 1832 vs OPR baptism 6 Jan 1833 = birth-baptism gap, both fit. CRITICAL: bayanne's Peter William b. 27 May 1837 Stucka = OUR EMIGRANT PETER (P22, b. 2 Jul 1837 per OPR 008/20/51). The 27 May vs 2 Jul 1837 difference = likely birth vs baptism date (OPR entry is the baptism). Emigrant Peter's death 'unknown' in bayanne = consistent with emigration to Australia 1858. NAME: 'Peter William' \u2014 William not previously recorded for P22; possibly honoured maternal grandfather William GANSON (Jean's father \u2014 naming pattern fits if Jean's father was William; GANSON family of Laxfirth, Nesting).",
+   "conflicts": [
+    13,
+    14
+   ],
+   "badge": "",
+   "subject": false
+  },
+  "P45": {
+   "id": "P45",
+   "name": "Jean (Jane) GANSON / GAUNSON",
+   "fullName": "Jean (Jane) GANSON / GAUNSON",
+   "gen": "3",
+   "sex": "F",
+   "bornShort": "1 Oct 1812, Laxfirth, Nesting, Shetland (bayanne; 1841 census c.1816)",
+   "diedShort": "29 May 1877, New Town, Lerwick (age 64)",
+   "placeShort": "Laxfirth",
+   "diedPlaceShort": "New Town",
+   "father": "?",
+   "mother": "?",
+   "born": "1 Oct 1812, Laxfirth, Nesting, Shetland (bayanne; 1841 census ~1816)",
+   "birthPlace": "Laxfirth, Nesting, Shetland",
+   "died": "29 May 1877, New Town, Lerwick (age 64)",
+   "deathPlace": "New Town, Lerwick, Shetland",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "John JOHNSON (P44)",
+   "mDate": "19 Nov 1831 per bayanne / 29 Nov 1831 per OPR 008/20/96 (Conflict #14)",
+   "mPlace": "Shetland (likely Northmavine)",
+   "sources": "OPR marriage 008/20/96; children's baptisms; 1841 census Hillswick; 1851 census Northmavine 008/2/13 (Jane 37, same page as John)",
+   "confidence": "Confirmed (bayanne I9921 family F24033)",
+   "notes": "RESOLVED: surname is GANSON/GAUNSON (real Shetland surname), not Taveron/Favron \u2014 that was a misread of the scribbled cert cell. OPR marriage record + 3 children's baptisms + 2 censuses all agree. 1841 household even has two Ganson servants (Margaret 30, Ursula 20 \u2014 likely her kin). 'Jean' = Scottish form of 'Jane'.\n\nBAYANNE I9921/F24033: full name 'Jane Johnson GANSON' \u2014 born GANSON, called Jane (Shetland Jean/Jane interchangeable). b. 1 Oct 1812 Laxfirth, Nesting; d. 29 May 1877 New Town, Lerwick age 64. 1841 census age 25 (~1816) vs bayanne 1812 \u2014 4-yr slip (or transcription); 1851 census 'Jane 37' (~1814) splits the difference.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P46": {
+   "id": "P46",
+   "name": "John LAIRD",
+   "fullName": "John LAIRD",
+   "gen": "3",
+   "sex": "M",
+   "bornShort": "c.1811 (50 in 1861 Falkirk Landward)",
+   "diedShort": "",
+   "placeShort": "Scotland",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "~1811 (50 in 1861 Falkirk Landward)",
+   "birthPlace": "Scotland (Falkirk area, Stirlingshire likely)",
+   "died": "?",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "Blacksmith",
+   "bdm": "OPR Falkirk: marriage 479/120/232 (1831); probable daughter's baptism 479/110/123 (1841)",
+   "marriedTo": "Jane Wilson",
+   "mDate": "14 Mar 1831, Falkirk (OPR 479/120/232, to Jean Russell)",
+   "mPlace": "Scotland",
+   "sources": "OPR marriage (Jean Russell, 1831, Falkirk); OPR birth Helen Wilson Laird (1841); 1851 census Falkirk 479/5/37 age 38 (w. son John 2); 1861 census Falkirk Landward 479/2 1/1 age 50 with Jane 46 same page",
+   "confidence": "Verified",
+   "notes": "Certificate: Blacksmith \u2713. 1861: John Laird 50 + Jane Laird 46, SAME PAGE, Falkirk Landward (479/2 1/1). Married Jean Russell 14/3/1831 Falkirk (479/120/232). Daughter Helen's baptism (479/110/123) register image read 28 Sep 2026: mother = JEAN RUSSELL. Wife confirmed.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P47": {
+   "id": "P47",
+   "name": "Jean RUSSELL (m. Laird)",
+   "fullName": "Jean RUSSELL (m. Laird)",
+   "gen": "3",
+   "sex": "F",
+   "bornShort": "c.1815 (46 in 1861)",
+   "diedShort": "",
+   "placeShort": "Scotland",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "~1815 (46 in 1861)",
+   "birthPlace": "Scotland (Falkirk area likely)",
+   "died": "?",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "John Laird",
+   "mDate": "14 Mar 1831, Falkirk (OPR 479/120/232, to John Laird)",
+   "mPlace": "Scotland",
+   "sources": "OPR marriage 479/120/232 (1831); daughter's OPR baptism 479/110/123 (2 May 1841, Falkirk) \u2014 register image read 28 Sep 2026 confirms mother = Jean Russell; 1851 census Falkirk 479/24/5 (Helen 8); 1861 census Falkirk Landward 479/2 1/1 (Jane Laird 46, same page as John 50)",
+   "confidence": "Verified",
+   "notes": "RESOLVED (was Conflict #12): Ellen/Helen's mother is JEAN RUSSELL per the baptismal register image (479/110/123, read 28 Sep 2026). Cert's 'Jane Wilson' explained by informant error or Helen's own middle name Wilson; no Laird\u00d7Wilson marriage exists in Stirlingshire 1828-45 or 1855-60, so the remarriage theory is dismissed. Helen's middle name 'Wilson' remains a curiosity \u2014 possibly honoring a maternal grandmother or other relative.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P24": {
+   "id": "P24",
+   "name": "Alfred FIELD",
+   "fullName": "Alfred FIELD",
+   "gen": 2,
+   "sex": "M",
+   "bornShort": "1851",
+   "diedShort": "09 Oct 1906",
+   "placeShort": "Gundagai NSW",
+   "diedPlaceShort": "Junee NSW",
+   "father": "Thomas Field",
+   "mother": "?",
+   "born": "1851",
+   "birthPlace": "Gundagai NSW (tree: 1851; obit: 'native of Gundagai')",
+   "died": "09 Oct 1906",
+   "deathPlace": "Junee NSW (at daughter Mrs Millsom's residence)",
+   "age": 55,
+   "burial": "Junee cemetery, 10 Oct 1906",
+   "occupation": "Miner ('Curly' Field)",
+   "bdm": "2386/1871",
+   "marriedTo": "Elizabeth Manton",
+   "mDate": "1871",
+   "mPlace": "Gundagai NSW",
+   "sources": "Tree (1851-1906, miner); 1906 Gundagai Independent obituary (full text captured); 1898 marriage register (father Alfred Field, miner); RootsChat (marriage reg 2386/1871)",
+   "confidence": "Verified",
+   "notes": "Obit: third son of Thomas Field, Gundagai pioneer; lived Gundagai nearly all his life; 17 months in Cowra with son Ern; holiday in Junee with daughter Mrs Millsom; returned to Gundagai; died Junee of chronic Bright's disease. Survivors: son Ern. Field (tailor, Cowra) + three daughters (Letitia, Mrs Millsom + one unnamed); brother Mark Field, sister Mrs Higgins attended funeral.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P25": {
+   "id": "P25",
+   "name": "Elizabeth MANTON",
+   "fullName": "Elizabeth MANTON",
+   "gen": 2,
+   "sex": "F",
+   "bornShort": "1850 (tree) / c.1851 (age 2 on 1853 arrival)",
+   "diedShort": "1885 (tree)",
+   "placeShort": "Kidderminster",
+   "diedPlaceShort": "?",
+   "father": "William Manton",
+   "mother": "Sarah Swain",
+   "born": "1850 (tree) / ~1851 (age 2 on 1853 arrival)",
+   "birthPlace": "Kidderminster, Worcestershire, England",
+   "died": "1885 (tree)",
+   "deathPlace": "?",
+   "age": "~35",
+   "burial": "",
+   "occupation": "",
+   "bdm": "2386/1871",
+   "marriedTo": "Alfred Field",
+   "mDate": "1871",
+   "mPlace": "Gundagai NSW",
+   "sources": "Tree (1850-1885); RootsChat Manton thread (arr. Melbourne 15 Feb 1853 on 'Marion Moore' aged 2 with parents William & Sarah, siblings Selina 6, John 3, infant Alfred); marriage register reads mother 'Elizabeth Hainton' = Manton (see Conflicts)",
+   "confidence": "Verified",
+   "notes": "Letitia's mother. Married at ~20, died ~1885 when Letitia was 4. Family bible origin: Kidderminster, England.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P26": {
+   "id": "P26",
+   "name": "Thomas FIELD",
+   "fullName": "Thomas FIELD",
+   "gen": 3,
+   "sex": "M",
+   "bornShort": "? (c.1800s-1810s)",
+   "diedShort": "bef. Oct 1906",
+   "placeShort": "England",
+   "diedPlaceShort": "Gundagai NSW",
+   "father": "?",
+   "mother": "?",
+   "born": "? (~1800s-1810s)",
+   "birthPlace": "England (likely)",
+   "died": "before Oct 1906",
+   "deathPlace": "Gundagai NSW",
+   "age": "",
+   "burial": "",
+   "occupation": "Pioneer / grazier",
+   "bdm": "",
+   "marriedTo": "?",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "1906 obituary ('third son of the late Mr. Thomas Field, one of Gundagai's pioneers')",
+   "confidence": "Verified",
+   "notes": "Named only in the 1906 obituary. A Thomas Field appears in Gundagai records from the 1850s (Trove 1853 unclaimed letters, 1860s Albury pioneers list) \u2014 same man likely but not yet pinned. Gundagai & District Historical Society would confirm.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P27": {
+   "id": "P27",
+   "name": "William MANTON",
+   "fullName": "William MANTON",
+   "gen": 4,
+   "sex": "M",
+   "bornShort": "c.1824",
+   "diedShort": "? after 1853",
+   "placeShort": "Kidderminster",
+   "diedPlaceShort": "?",
+   "father": "?",
+   "mother": "?",
+   "born": "~1824",
+   "birthPlace": "Kidderminster, Worcestershire, England",
+   "died": "? after 1853",
+   "deathPlace": "? (Lower Murray VIC first, then Gundagai NSW)",
+   "age": "",
+   "burial": "",
+   "occupation": "Weaver (sponsored by Felton & Chadwick, Lower Murray, \u00a350/12mo)",
+   "bdm": "",
+   "marriedTo": "Sarah Swain",
+   "mDate": "25 Dec 1845",
+   "mPlace": "Kidderminster, Worcestershire, England",
+   "sources": "RootsChat Manton thread (marriage, 1851 & ship census data)",
+   "confidence": "Verified",
+   "notes": "Ggg-grandfather. Married Christmas Day 1845. Emigrated Liverpool\u2192Melbourne on 'Marion Moore', arrived 15 Feb 1853 with wife and 4 children.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P28": {
+   "id": "P28",
+   "name": "Sarah SWAIN",
+   "fullName": "Sarah SWAIN",
+   "gen": 4,
+   "sex": "F",
+   "bornShort": "c.1825",
+   "diedShort": "? after 1853",
+   "placeShort": "England",
+   "diedPlaceShort": "?",
+   "father": "?",
+   "mother": "?",
+   "born": "~1825",
+   "birthPlace": "England",
+   "died": "? after 1853",
+   "deathPlace": "?",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "William Manton",
+   "mDate": "25 Dec 1845",
+   "mPlace": "Kidderminster, England",
+   "sources": "RootsChat Manton thread",
+   "confidence": "Verified",
+   "notes": "Ggg-grandmother. Daughter Selina (b. 1846) married Alfred James Dean in Gundagai 1862; died Adelong 1879.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P29": {
+   "id": "P29",
+   "name": "Thomas FANTOM",
+   "fullName": "Thomas FANTOM",
+   "gen": 3,
+   "sex": "M",
+   "bornShort": "c.1860s",
+   "diedShort": "",
+   "placeShort": "Chesterfield",
+   "diedPlaceShort": "England/Newcastle NSW?",
+   "father": "?",
+   "mother": "?",
+   "born": "~1860s",
+   "birthPlace": "Chesterfield, Derbyshire, England",
+   "died": "?",
+   "deathPlace": "England/Newcastle NSW?",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Catherine 'Kate' Sanders",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "Sandgate cemetery inscription (son Herbert b. Chesterfield 1885, son of Thomas & Catherine (Kate) Sanders); Fantom cluster inscriptions",
+   "confidence": "Likely",
+   "notes": "PROBABLE grandfather of Eunice (if Eunice is Herbert's daughter). Chesterfield Derbyshire origin for the Fantom family.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P30": {
+   "id": "P30",
+   "name": "Catherine 'Kate' SANDERS",
+   "fullName": "Catherine 'Kate' SANDERS",
+   "gen": 3,
+   "sex": "F",
+   "bornShort": "c.1840s",
+   "diedShort": "",
+   "placeShort": "England",
+   "diedPlaceShort": "?",
+   "father": "?",
+   "mother": "?",
+   "born": "~1840s",
+   "birthPlace": "England",
+   "died": "?",
+   "deathPlace": "?",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Thomas Fantom",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "Sandgate inscription",
+   "confidence": "Likely",
+   "notes": "Wife of Thomas Fantom.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P31": {
+   "id": "P31",
+   "name": "Samuel KING",
+   "fullName": "Samuel KING",
+   "gen": 3,
+   "sex": "M",
+   "bornShort": "c.1860s",
+   "diedShort": "",
+   "placeShort": "England",
+   "diedPlaceShort": "?",
+   "father": "?",
+   "mother": "?",
+   "born": "~1860s",
+   "birthPlace": "England",
+   "died": "?",
+   "deathPlace": "?",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Mary",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "Sandgate inscription (Sarah Fantom n\u00e9e King, dau/Samuel & Mary, b. England ~1888)",
+   "confidence": "Likely",
+   "notes": "PROBABLE grandfather of Eunice (if Eunice is daughter of Herbert & Sarah King).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P32": {
+   "id": "P32",
+   "name": "Mary KING",
+   "fullName": "Mary KING",
+   "gen": 3,
+   "sex": "F",
+   "bornShort": "c.1860s",
+   "diedShort": "",
+   "placeShort": "England",
+   "diedPlaceShort": "?",
+   "father": "?",
+   "mother": "?",
+   "born": "~1860s",
+   "birthPlace": "England",
+   "died": "?",
+   "deathPlace": "?",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Samuel King",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "Sandgate inscription",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P33": {
+   "id": "P33",
+   "name": "Herbert FANTOM",
+   "fullName": "Herbert FANTOM",
+   "gen": 1,
+   "sex": "M",
+   "bornShort": "1885",
+   "diedShort": "24 Dec 1956",
+   "placeShort": "Chesterfield",
+   "diedPlaceShort": "Newcastle NSW",
+   "father": "Thomas Fantom",
+   "mother": "Catherine 'Kate' Sanders",
+   "born": "1885",
+   "birthPlace": "Chesterfield, Derbyshire, England",
+   "died": "24 Dec 1956",
+   "deathPlace": "Newcastle NSW",
+   "age": 71,
+   "burial": "Sandgate Cemetery NSW (Utg D, 64)",
+   "occupation": "Miner (likely)",
+   "bdm": "",
+   "marriedTo": "Sarah King",
+   "mDate": "? (~1910)",
+   "mPlace": "Newcastle NSW",
+   "sources": "Sandgate inscriptions ( Herbert + Sarah + dau Joyce)",
+   "confidence": "Likely",
+   "notes": "PROBABLE father of Eunice \u2014 NOT PROVEN. Family lived 9 Regan St, Adamstown (Lost Newcastle thread). Children cluster: Helen, Joyce (d. 1928 aged child), Herbert jr, Samuel, Arthur, Ivy, Eunice(?).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P34": {
+   "id": "P34",
+   "name": "Sarah FANTOM (n\u00e9e KING)",
+   "fullName": "Sarah FANTOM (n\u00e9e KING)",
+   "gen": 1,
+   "sex": "F",
+   "bornShort": "c.1888",
+   "diedShort": "23 Nov 1956",
+   "placeShort": "England",
+   "diedPlaceShort": "Newcastle NSW",
+   "father": "Samuel King",
+   "mother": "Mary",
+   "born": "~1888",
+   "birthPlace": "England",
+   "died": "23 Nov 1956",
+   "deathPlace": "Newcastle NSW",
+   "age": 68,
+   "burial": "Sandgate Cemetery NSW (Utg D, 66 \u2014 same plot row as Herbert)",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Herbert Fantom",
+   "mDate": "? (~1910)",
+   "mPlace": "Newcastle NSW",
+   "sources": "Sandgate inscriptions",
+   "confidence": "Likely",
+   "notes": "PROBABLE mother of Eunice \u2014 NOT PROVEN.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P35": {
+   "id": "P35",
+   "name": "Helen FANTOM",
+   "fullName": "Helen FANTOM",
+   "gen": 0,
+   "sex": "F",
+   "bornShort": "c.1910s",
+   "diedShort": "",
+   "placeShort": "Adamstown NSW",
+   "diedPlaceShort": "",
+   "father": "Herbert Fantom (likely)",
+   "mother": "Sarah King (likely)",
+   "born": "~1910s",
+   "birthPlace": "Adamstown NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Alex Charles Johnston",
+   "mDate": "engaged 28 May 1942",
+   "mPlace": "Newcastle (Newcastle Sun notice)",
+   "sources": "Newcastle Sun 28 May 1942 ('sixth daughter of Mr and Mrs H. Fantom of Adamstown'); NMH 3 Aug 1946 birth notice ('A. Johnston n\u00e9e Helen Fantom \u2014 a daughter, Pauline Helen, Mater Hospital')",
+   "confidence": "Verified",
+   "notes": "Shows Fantom\u2013Johnston intermarriage in Newcastle, but ALEX CHARLES JOHNSTON of Merewether is NOT one of 'our' Johnstons \u2014 different family. Relevant only as context for Eunice's family cluster.",
+   "conflicts": [],
+   "badge": "m. Alex Charles Johnston (different Johnston family)",
+   "subject": false
+  },
+  "P36": {
+   "id": "P36",
+   "name": "Peter Allan Johnston",
+   "fullName": "Peter Allan Johnston",
+   "gen": -1,
+   "sex": "M",
+   "bornShort": "17 Nov 1944",
+   "diedShort": "",
+   "placeShort": "Camperdown NSW",
+   "diedPlaceShort": "",
+   "father": "Alfred Henry Johnston",
+   "mother": "Eunice Fantom",
+   "born": "17 Nov 1944",
+   "birthPlace": "Camperdown NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Madelaine Annette Maher",
+   "mDate": "27 Jan 1968",
+   "mPlace": "Concord NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Alfred & Eunice's son. ('Peter' also named in Hillston inscription child list \u2014 see Conflicts.)",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P37": {
+   "id": "P37",
+   "name": "Suzanne Johnston",
+   "fullName": "Suzanne Johnston",
+   "gen": -1,
+   "sex": "F",
+   "bornShort": "18 Feb 1950",
+   "diedShort": "",
+   "placeShort": "Camperdown NSW",
+   "diedPlaceShort": "",
+   "father": "Alfred Henry Johnston",
+   "mother": "Eunice Fantom",
+   "born": "18 Feb 1950",
+   "birthPlace": "Camperdown NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Ron Alof Lawton",
+   "mDate": "09 Feb 1971",
+   "mPlace": "?",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "Alfred & Eunice's daughter.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P38": {
+   "id": "P38",
+   "name": "Ron Alof Lawton",
+   "fullName": "Ron Alof Lawton",
+   "gen": -1,
+   "sex": "M",
+   "bornShort": "23 Nov 1948",
+   "diedShort": "",
+   "placeShort": "",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "23 Nov 1948",
+   "birthPlace": "",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Suzanne Johnston",
+   "mDate": "09 Feb 1971",
+   "mPlace": "?",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P39": {
+   "id": "P39",
+   "name": "Madelaine Annette Maher",
+   "fullName": "Madelaine Annette Maher",
+   "gen": -1,
+   "sex": "F",
+   "bornShort": "12 Jun 1945",
+   "diedShort": "",
+   "placeShort": "Inverell NSW",
+   "diedPlaceShort": "",
+   "father": "James Henry Maher",
+   "mother": "Vera Jean Maher",
+   "born": "12 Jun 1945",
+   "birthPlace": "Inverell NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Peter Allan Johnston",
+   "mDate": "27 Jan 1968",
+   "mPlace": "Concord NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P40": {
+   "id": "P40",
+   "name": "Peter Ross Maher",
+   "fullName": "Peter Ross Maher",
+   "gen": -1,
+   "sex": "M",
+   "bornShort": "29 Sep 1942",
+   "diedShort": "29 Nov 2015",
+   "placeShort": "Inverell NSW",
+   "diedPlaceShort": "Wollongong NSW",
+   "father": "James Henry Maher",
+   "mother": "Vera Jean Maher",
+   "born": "29 Sep 1942",
+   "birthPlace": "Inverell NSW",
+   "died": "29 Nov 2015",
+   "deathPlace": "Wollongong NSW",
+   "age": 73,
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Dianne Sheryl Steele",
+   "mDate": "05 Sep 1970",
+   "mPlace": "Matraville NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P41": {
+   "id": "P41",
+   "name": "Dianne Sheryl Steele",
+   "fullName": "Dianne Sheryl Steele",
+   "gen": -1,
+   "sex": "F",
+   "bornShort": "10 Jul 1947",
+   "diedShort": "",
+   "placeShort": "Paddington NSW",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "10 Jul 1947",
+   "birthPlace": "Paddington NSW",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Peter Ross Maher",
+   "mDate": "05 Sep 1970",
+   "mPlace": "Matraville NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P42": {
+   "id": "P42",
+   "name": "Scott Andrew Bartlett",
+   "fullName": "Scott Andrew Bartlett",
+   "gen": -1,
+   "sex": "M",
+   "bornShort": "04 Oct 1973",
+   "diedShort": "",
+   "placeShort": "",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "04 Oct 1973",
+   "birthPlace": "",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Nicole Ann Johnston",
+   "mDate": "27 Feb 2009",
+   "mPlace": "Eschols Park NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P43": {
+   "id": "P43",
+   "name": "Amy Yuet-Li Kok",
+   "fullName": "Amy Yuet-Li Kok",
+   "gen": -1,
+   "sex": "F",
+   "bornShort": "19 May 1982",
+   "diedShort": "",
+   "placeShort": "Hong Kong",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "19 May 1982",
+   "birthPlace": "Hong Kong",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "",
+   "marriedTo": "Darren Peter Johnston",
+   "mDate": "26 Jul 2014",
+   "mPlace": "Darling Harbour NSW",
+   "sources": "Tree",
+   "confidence": "Likely",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P48": {
+   "id": "P48",
+   "name": "Peter JOHNSON",
+   "fullName": "Peter JOHNSON (b. 1781)",
+   "gen": 4,
+   "sex": "M",
+   "bornShort": "1781, Hillswick, Northmavine (bayanne; 60 in 1841 census); d. 1862 (per pedigree; one OCR read 1882 \u2014 verify)",
+   "diedShort": "aft 1841 (per bayanne I9921 father entry \u2014 'd. Aft 1841, Age > 61')",
+   "placeShort": "Hillswick",
+   "diedPlaceShort": "",
+   "father": "John NICOLSON (candidate, bayanne F46443 \u2014 see P50)",
+   "mother": "Ann SIMONSON (candidate, bayanne \u2014 see P51)",
+   "born": "1781, Hillswick, Northmavine (bayanne; 60 in 1841 census); d. 1862 (per pedigree; one OCR read 1882 \u2014 verify)",
+   "birthPlace": "Hillswick, Northmavine, Shetland",
+   "died": "aft 1841 (per bayanne I9921 father entry \u2014 'd. Aft 1841, Age > 61')",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "Small Farmer and Fisherman (1841)",
+   "bdm": "bayanne F28867 (marriage); FreeCEN 1841 Hillswick piece 8 ED2 p6",
+   "marriedTo": "Grace HENDERSON",
+   "mDate": "1 Dec 1805 (bayanne F28867 \u2014 unverified)",
+   "mPlace": "Northmavine",
+   "sources": "FreeCEN 1841: Hillswick ED2 p.6, Peter 60 Small Farmer & Fisherman + Grace 55 + Anderina 20 + Thomas 15 (children? servants?)",
+   "confidence": "Confirmed (bayanne I9921 + 1841 census + naming pattern + Ross-servant link)",
+   "notes": "PROBABLE paternal grandfather. bayanne I9921 pedigree (user-supplied screenshot 2026-09-28): Peter JOHNSON b. 1781, d. ~1862, m. Grace HENDERSON 1 Dec 1805 Northmavine. Children (bayanne): John (1806-1884 \u2014 probable P44), Mary (1808-1892), Ann (1812-1899), Ross (1816-1893 \u2014 the 'Ross Johnson 21' servant in our John's 1841 household, P54), Anderina (1819-1902), Thomas Gifford (1823-1850), Agnes (b.~1828). 1841 census Hillswick ED2 p.6 (Peter 60 Small Farmer & Fisherman + Grace 55 + Anderina 20 + Thomas 15) now LOCKED to this family: Anderina b.1819 (census 20) + Thomas Gifford b.1823 (census 15) exact child match. Parents (bayanne F46443): John NICOLSON + Ann SIMONSON (P50/P51); siblings: Cecilia (1775-1862), Nicol (1776-1862, P55), Agnes (b.~1777), Sophia (b.~1780). KEY: death ~1862 is POST-1855 -> statutory death cert EXISTS and names HIS parents \u2014 one image purchase locks Gen 5 with primary evidence (Next Step NEW-2).\n\nUPDATE 2026-09-28 (I9921 person page): listed as 'Peter JOHNSON, b. 1781 Hillswick, d. Aft 1841 (Age > 61)' \u2014 NOT 1862/1882 (earlier OCR misread of the PEDIGREE page; the person page is authoritative). Wife Grace d. 9 Oct 1861 Sound, Lerwick age 79. EVICTION STORY (bayanne note on F28867, source transcribed by Robert Lyle Johnson, Northmavine OPR): 'Peter and his wife and family were evicted in 1821 from Finniland, in the Ness of Hillswick, by Arthur GIFFORD of Busta, to make way for the Findlins Farm. Their first abode after the eviction was in a roofed-over dug-out in a peat bank, which later became the croft of Packin (so called because when the dug-out was completed by Thomas Johnson, he told everybody to pack in).' Last modified 9 Dec 2018; Family ID F28867.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P49": {
+   "id": "P49",
+   "name": "Grace HENDERSON (m. Johnson)",
+   "fullName": "Grace HENDERSON (m. Johnson)",
+   "gen": 4,
+   "sex": "F",
+   "bornShort": "c.1782 (bayanne; d. 1851; 1841 census age 55 -> c.1786)",
+   "diedShort": "",
+   "placeShort": "Shetland",
+   "diedPlaceShort": "",
+   "father": "Andrew HENDERSON (P52)",
+   "mother": "Margaret ROSS (P53)",
+   "born": "~1782 (bayanne; d. 1851; 1841 census age 55 -> ~1786)",
+   "birthPlace": "Shetland",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F28867; FreeCEN 1841",
+   "marriedTo": "Peter JOHNSON",
+   "mDate": "1 Dec 1805 (bayanne \u2014 unverified)",
+   "mPlace": "Northmavine",
+   "sources": "FreeCEN 1841: Hillswick ED2 p.6, Grace 55 in Peter's household",
+   "confidence": "Probable \u2014 pending I9921 spouse check",
+   "notes": "PROBABLE paternal grandmother. bayanne: b. ~1782, d. 1851; m. Peter JOHNSON 1 Dec 1805 Northmavine. Parents per pedigree: Andrew HENDERSON (b.~1753, P52) + Margaret ROSS (b.~1758, P53); siblings: Andrina (1776-1857), Charles (b.~1780), Thomas (b.~1790). Our John's 2nd daughter Grace (b. 1839) honours her under the Scottish naming pattern.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P50": {
+   "id": "P50",
+   "name": "John NICOLSON (candidate)",
+   "fullName": "John NICOLSON (candidate Gen-5)",
+   "gen": 5,
+   "sex": "M",
+   "bornShort": "Bef 1749 (c.1748), Shetland",
+   "diedShort": "",
+   "placeShort": "Shetland",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "Bef 1749 (~1748), Shetland",
+   "birthPlace": "Shetland",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F46443 only",
+   "marriedTo": "Ann SIMONSON",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne.info F46443 (compiled tree, unverified)",
+   "confidence": "Verified (primary: OPR 008/10/43 names him + spouse, Hillswick, 1771)",
+   "notes": "CANDIDATE great-great-grandfather (Gen 5) per bayanne.info compiled tree F46443: children Cecilia JOHNSON 1775, Nicol JOHNSON 1776, Sophia JOHNSON 1780, Peter JOHNSON 1781 \u2014 children took patronymic JOHNSON (son of John) as fixed surname. If Peter b.1781 is confirmed as our John's father, this extends the paternal line TWO more generations (to John Nicolson b. <1749). VERIFY: Peter's statutory death cert if post-1855 (names parents), or OPR baptism of Peter 1781 (may name father). CORROBORATED by user's bayanne screenshots (2026-09-28): children Cecilia (1775), Nicol (1776), Agnes (1777), Sophia (1780), Peter (1781) \u2014 children took patronymic JOHNSON as fixed surname.\n\nGEN-6 WALL (researched 2026-09-28): bayanne has NO parents recorded for John (his 5-gen pedigree ends at him) and NO parents for Ann Simonson. Root cause: Northmavine OPR baptisms begin 1758 (1758-65 = sheriff-certified copies; gap Oct 1783-Oct 1788) and OPR marriages begin 1788 \u2014 John b. ~1748 and his marriage (~early 1770s, first child Cecilia 1775) BOTH predate the surviving registers. His children's baptisms (Agnes 1771, Cecilia 1775, Nicol 1776, Sophia 1780, Peter 1781 \u2014 bayanne places: Westerhouse, Moors, Hillswick) DO fall inside the OPR period. No statutory death cert (both d. before 1855, aged 105+ would be required). Routes past him are archive-based only: Kirk Session minutes (CH2/286: 1729, 1758-1852, incl. the Discipline register the OPR itself was copied from), Busta estate papers (Gifford rentals of Northmavine, family were estate tenants; tenancies passed father-to-son), scat rolls, wills/testaments (Commissary Court of Orkney & Shetland to 1823), monumental inscriptions (Hillswick kirkyard).\n\nUPDATE 2026-09-29 (user ScotlandsPeople session): (1) WILLS INDEX NULL \u2014 only 2 NICOLSON testaments in Orkney & Shetland Commissary Court (CC17/5/6): John Nicolson 1821 'minister of Unst' (wrong man, educated clergy) and James Nicolson 1819 'Captain RN' (naval gentry). Our tenant John left no surviving testament \u2014 expected for a landless crofter. (2) NEW LEAD: bayanne F46443 search snippet shows a child b. '5 Dec 1771, Hillswick, Northmavine' \u2014 a specific date implying OPR-derived data; bayanne's source for this family is the Robert Lyle Johnson transcription of the Northmavine OPR (source [547] on P48's page). The F46443 children's baptisms are therefore LIKELY IN the Northmavine register under an untried surname form. Probe: forename AGNES, Shetland, 1769-73 (also CECILIA 1773-77, SOPHIA 1778-82, NICOL 1774-78), then PETER 1777-83 under whatever surname surfaces.\n\nCONFIRMED AT INDEX LEVEL 2026-09-29: ScotlandsPeople OPR index 008/10/43 \u2014 daughter AGNES NICOLSON bap. 1 Dec 1771 Northmavine, parents JOHN NICOLSON/ANN SIMONSDAUGR. The family IS in the Northmavine register under NICOLSON (not Johnson/Johnston). NEXT: locate PETER NICOLSON bap. ~1781 in 008/10 series and buy that image for primary confirmation + toon.\n\nPRIMARY VERIFICATION 2026-09-29 (OPR 008/10/43, user-read image): 'John Nicolson & Spouse Ann Simonsdaughter residing in Hillswick' \u2014 daughter Agnes bap. 1 Dec 1771. COUPLE + ADDRESS verified from the register. Hillswick (1771) is the pre-eviction address; family at Finniland by the 1821 Busta eviction (per bayanne narrative) \u2014 BOTH addresses go to the Busta estate-rental search. Peter-as-son link remains bayanne F46443 + 1841 census adjacency (Peter 60 beside Nicol 63, Hillswick) + naming pattern; Peter's own baptism not found in 008/10 (likely fell in the Oct 1783\u2013Oct 1788 register gap \u2014 delayed baptism).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P51": {
+   "id": "P51",
+   "name": "Ann SIMONSON (candidate)",
+   "fullName": "Ann SIMONSON (candidate Gen-5)",
+   "gen": 5,
+   "sex": "F",
+   "bornShort": "Bef 1750 (c.1748), Shetland",
+   "diedShort": "",
+   "placeShort": "Shetland",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "Bef 1750 (~1748), Shetland",
+   "birthPlace": "Shetland",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F46443 only",
+   "marriedTo": "John NICOLSON",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne.info F46443 (compiled tree, unverified)",
+   "confidence": "Verified (primary: OPR 008/10/43 \u2014 recorded as \"Ann Simonsdaughter\", Hillswick, 1771)",
+   "notes": "CANDIDATE great-great-grandmother (Gen 5) per bayanne F46443 \u2014 wife of John NICOLSON, mother of the JOHNSON-surnamed children incl. Peter b.1781.\n\nGEN-6 WALL: no parents in bayanne; predates Northmavine OPR (1758). d. UNKNOWN per bayanne \u2014 burial/MIs unrecorded. Sibling detail: her probable kin Margaret SIMONSON (1779-1840) m. Nicol JOHNSON (P55) \u2014 two Simonson-Ganson-era links suggest Simonsons were a Northmavine-area family.\n\nCONFIRMED AT INDEX LEVEL 2026-09-29: OPR index 008/10/43 records her as 'ANN SIMONSDAUGR' (Simon's daughter \u2014 patronymic form of Simonson) as mother of Agnes NICOLSON bap. 1771.\n\nPRIMARY VERIFICATION 2026-09-29: OPR 008/10/43 records her as 'Spouse Ann Simonsdaughter residing in Hillswick'. Patronymic confirms her father was SIMON \u2014 a Gen-6 lead on the maternal side (search kirk-session/rentals for a SIMON/SIMSON in Hillswick/Northmavine, 1720s-1740s).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P54": {
+   "id": "P54",
+   "name": "Ross JOHNSON",
+   "fullName": "Ross JOHNSON (b. 1816)",
+   "gen": "3",
+   "sex": "M",
+   "bornShort": "1816, Northmavine (bayanne); d. 1893",
+   "diedShort": "",
+   "placeShort": "Northmavine",
+   "diedPlaceShort": "",
+   "father": "Peter JOHNSON (P48)",
+   "mother": "Grace HENDERSON (P49)",
+   "born": "1816, Northmavine (bayanne); d. 1893",
+   "birthPlace": "Northmavine, Shetland",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "Servant/farmhand in brother John's household (1841 census)",
+   "bdm": "bayanne I9921 pedigree; FreeCEN 1841",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne pedigree (user screenshot); 1841 census Hillswick ED2 p.1 'Ross Johnson 21' servant in our John's household",
+   "confidence": "Probable",
+   "notes": "Brother of John JOHNSON (I9921 = probable P44). Our John's 1841 Hillswick household includes servant 'Ross Johnson 21' \u2014 almost certainly this brother (census age loose: b.1816 -> 24-25 in 1841). A key identity link between OUR John and Peter x Grace's family: you'd expect a younger brother working for the newly-married elder brother.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P55": {
+   "id": "P55",
+   "name": "Nicol JOHNSON",
+   "fullName": "Nicol JOHNSON (b. 1776)",
+   "gen": 4,
+   "sex": "M",
+   "bornShort": "1776, Hillswick area (bayanne; 63 in 1841 census); d. 1862",
+   "diedShort": "",
+   "placeShort": "Hillswick",
+   "diedPlaceShort": "",
+   "father": "John NICOLSON (P50)",
+   "mother": "Ann SIMONSON (P51)",
+   "born": "1776, Hillswick area (bayanne; 63 in 1841 census); d. 1862",
+   "birthPlace": "Hillswick, Northmavine, Shetland",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "Small Farmer & Fisherman (1841)",
+   "bdm": "bayanne I107402 (user screenshot); FreeCEN 1841 Hillswick ED2 p.1",
+   "marriedTo": "Margaret SIMONSON (1779-1840, per bayanne)",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne Nicol JOHNSON page I107402 (user screenshot); 1841 census",
+   "confidence": "Verified (census) / compiled (family)",
+   "notes": "Peter JOHNSON's brother (P48). THE 'Nicol Johnson 63' household on our John's own 1841 census page (Hillswick ED2 p.1). His household includes another John Johnson 30 = Nicol's son John b. 30 Aug 1807, d. 1 Jun 1850 AT SEA \u2014 NOT our John (resolves the same-name puzzle: three John Johnsons b.~1806-11 in one ED \u2014 ours (head, wife Jane, children B/P/G), Nicol's son John b.1807 (d. 1850), and the Heylor John (different wife/children)). Nicol's children per bayanne: John (1807-1850), Mary (1810-1885), Ann (1812-1867), Charlotte (1815-), James (1819-1901), Jacobina (1822-1885), George (1825-).",
+   "conflicts": [],
+   "badge": "m. Margaret Simonson",
+   "subject": false
+  },
+  "P52": {
+   "id": "P52",
+   "name": "Andrew HENDERSON",
+   "fullName": "Andrew HENDERSON (b. ~1753)",
+   "gen": 5,
+   "sex": "M",
+   "bornShort": "c.1753, Shetland",
+   "diedShort": "",
+   "placeShort": "Shetland",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "~1753, Shetland",
+   "birthPlace": "Shetland (likely Northmavine area)",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne I9921 pedigree (user screenshot)",
+   "marriedTo": "Margaret ROSS",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne pedigree I9921 \u2014 Grace HENDERSON's parents",
+   "confidence": "Strong lead (compiled tree)",
+   "notes": "Probable great-great-grandfather (Gen 5, maternal line of John JOHNSON): father of Grace HENDERSON (1782-1851, P49). Other children per pedigree: Andrina (1776-1857), Charles (b.~1780), Thomas (b.~1790). VERIFY via Grace's OPR baptism (father 'Andrew Henderson', Northmavine-area parish) or the Peter x Grace marriage image if it names her father.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P53": {
+   "id": "P53",
+   "name": "Margaret ROSS (m. Henderson)",
+   "fullName": "Margaret ROSS (m. Henderson)",
+   "gen": 5,
+   "sex": "F",
+   "bornShort": "c.1758, Shetland",
+   "diedShort": "",
+   "placeShort": "Shetland",
+   "diedPlaceShort": "",
+   "father": "?",
+   "mother": "?",
+   "born": "~1758, Shetland",
+   "birthPlace": "Shetland",
+   "died": "",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne I9921 pedigree (user screenshot)",
+   "marriedTo": "Andrew HENDERSON (P52)",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne pedigree I9921 \u2014 Grace HENDERSON's parents",
+   "confidence": "Strong lead (compiled tree)",
+   "notes": "Probable great-great-grandmother (Gen 5): mother of Grace HENDERSON (P49).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P56": {
+   "id": "P56",
+   "name": "Barbara Grace Gifford JOHNSON",
+   "fullName": "Barbara Grace Gifford JOHNSON",
+   "gen": 2,
+   "sex": "F",
+   "bornShort": "28 Dec 1832, Stucca (Stucka), Hillswick, Northmavine",
+   "diedShort": "14 Dec 1914, Lerwick (age 81)",
+   "placeShort": "Stucca",
+   "diedPlaceShort": "Lerwick",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "28 Dec 1832, Stucca (Stucka), Hillswick, Northmavine",
+   "birthPlace": "Stucca, Hillswick, Northmavine, Shetland",
+   "died": "14 Dec 1914, Lerwick (age 81)",
+   "deathPlace": "Lerwick, Shetland",
+   "age": "81",
+   "burial": "",
+   "occupation": "",
+   "bdm": "OPR baptism 6 Jan 1833 Northmavine (008/20/42); bayanne F24033",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne I9921 child list; OPR 008/20/42",
+   "confidence": "Confirmed (OPR + bayanne)",
+   "notes": "Eldest child of John & Jane. OPR baptism 6 Jan 1833 \u2014 bayanne birth 28 Dec 1832 = birth-baptism gap. 'Gifford' middle name: Arthur GIFFORD of Busta was the landlord who evicted Peter & family in 1821 (see P48 note) \u2014 Gifford names in this family honour the laird's family, not necessarily kin. Named Barbara Grace for grandmothers (Grace Henderson = paternal grandmother; Barbara = maternal grandmother? Jean Ganson's mother, unverified).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P57": {
+   "id": "P57",
+   "name": "Helen Jane JOHNSON",
+   "fullName": "Helen Jane JOHNSON (b. 1835)",
+   "gen": 2,
+   "sex": "F",
+   "bornShort": "29 Mar 1835, Stucka, near Hillswick, Northmavine",
+   "diedShort": "bef 1841 (age <5)",
+   "placeShort": "Stucka",
+   "diedPlaceShort": "",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "29 Mar 1835, Stucka, near Hillswick, Northmavine",
+   "birthPlace": "Stucka, Hillswick, Northmavine, Shetland",
+   "died": "bef 1841 (age <5)",
+   "deathPlace": "",
+   "age": "<5",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F24033",
+   "marriedTo": "-",
+   "mDate": "-",
+   "mPlace": "-",
+   "sources": "bayanne I9921 child list",
+   "confidence": "Confirmed (compiled, absent 1841 census)",
+   "notes": "Died in infancy. Not in 1841 census household (B 8 / P 4 / G 2 only) \u2014 consistent. NOTE: sister Helen Jane b. 1850 (P63) re-used the name.",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P58": {
+   "id": "P58",
+   "name": "Grace JOHNSON",
+   "fullName": "Grace JOHNSON (b. 1839)",
+   "gen": 2,
+   "sex": "F",
+   "bornShort": "7 Oct 1839, Stucca, Hillswick, Northmavine",
+   "diedShort": "24 Oct 1985, 41 Burgh Road, Lerwick (age 96)",
+   "placeShort": "Stucca",
+   "diedPlaceShort": "Lerwick",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "7 Oct 1839, Stucca, Hillswick, Northmavine",
+   "birthPlace": "Stucca, Hillswick, Northmavine, Shetland",
+   "died": "24 Oct 1985, 41 Burgh Road, Lerwick (age 96)",
+   "deathPlace": "Lerwick, Shetland",
+   "age": "96",
+   "burial": "",
+   "occupation": "",
+   "bdm": "OPR baptism 3 Nov 1839 Northmavine (008/20/54); bayanne F24033",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne I9921 child list; OPR 008/20/54",
+   "confidence": "Confirmed (OPR + bayanne)",
+   "notes": "Named for paternal grandmother Grace HENDERSON (P49). Lived to 96 (d. 24 Oct 1985).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P59": {
+   "id": "P59",
+   "name": "Andrew JOHNSON",
+   "fullName": "Andrew JOHNSON (b. 1841)",
+   "gen": 2,
+   "sex": "M",
+   "bornShort": "1 Oct 1841, Finlans, Northmavine",
+   "diedShort": "5 Apr 1871, Lower Sound, Lerwick (age 29)",
+   "placeShort": "Finlans",
+   "diedPlaceShort": "Lower Sound",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "1 Oct 1841, Finlans, Northmavine",
+   "birthPlace": "Finlans, Northmavine, Shetland",
+   "died": "5 Apr 1871, Lower Sound, Lerwick (age 29)",
+   "deathPlace": "Lower Sound, Lerwick, Shetland",
+   "age": "29",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F24033",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne I9921 child list",
+   "confidence": "Confirmed (compiled)",
+   "notes": "Born after 1841 census. Family at Finlans 1841-43 (John's HoF-roll address 'Finlans 1839' continues).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P60": {
+   "id": "P60",
+   "name": "Robert JOHNSON",
+   "fullName": "Robert JOHNSON (b. 1843)",
+   "gen": 2,
+   "sex": "M",
+   "bornShort": "8 Nov 1843, Finlans, near Hillswick, Northmavine",
+   "diedShort": "unknown",
+   "placeShort": "Finlans",
+   "diedPlaceShort": "",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "8 Nov 1843, Finlans, near Hillswick, Northmavine",
+   "birthPlace": "Finlans, Northmavine, Shetland",
+   "died": "unknown",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F24033",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne I9921 child list",
+   "confidence": "Confirmed (compiled)",
+   "notes": "Death unknown in bayanne \u2014 could also have emigrated (unverified).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P61": {
+   "id": "P61",
+   "name": "Laurence JOHNSON",
+   "fullName": "Laurence JOHNSON (b. 1846)",
+   "gen": 2,
+   "sex": "M",
+   "bornShort": "26 Mar 1846, Finlans, near Hillswick, Northmavine",
+   "diedShort": "unknown",
+   "placeShort": "Finlans",
+   "diedPlaceShort": "",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "26 Mar 1846, Finlans, near Hillswick, Northmavine",
+   "birthPlace": "Finlans, Northmavine, Shetland",
+   "died": "unknown",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F24033",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne I9921 child list",
+   "confidence": "Confirmed (compiled)",
+   "notes": "",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P62": {
+   "id": "P62",
+   "name": "Thomas Gifford JOHNSON",
+   "fullName": "Thomas Gifford JOHNSON (b. 1848)",
+   "gen": 2,
+   "sex": "M",
+   "bornShort": "20 May 1848, Snabul, Hillswick, Northmavine",
+   "diedShort": "unknown",
+   "placeShort": "Snabul",
+   "diedPlaceShort": "",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "20 May 1848, Snabul, Hillswick, Northmavine",
+   "birthPlace": "Snabul, Hillswick, Northmavine, Shetland",
+   "died": "unknown",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F24033",
+   "marriedTo": "?",
+   "mDate": "?",
+   "mPlace": "?",
+   "sources": "bayanne I9921 child list",
+   "confidence": "Confirmed (compiled)",
+   "notes": "'Gifford' middle name \u2014 laird connection (see P56 note).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P63": {
+   "id": "P63",
+   "name": "Helen Jane JOHNSON",
+   "fullName": "Helen Jane JOHNSON (b. 1850)",
+   "gen": 2,
+   "sex": "F",
+   "bornShort": "7 Aug 1850, Lerwick",
+   "diedShort": "bef 1879 (age <28)",
+   "placeShort": "Lerwick",
+   "diedPlaceShort": "",
+   "father": "John JOHNSON (P44)",
+   "mother": "Jane Johnson GANSON (P45)",
+   "born": "7 Aug 1850, Lerwick",
+   "birthPlace": "Lerwick, Shetland",
+   "died": "bef 1879 (age <28)",
+   "deathPlace": "",
+   "age": "<28",
+   "burial": "",
+   "occupation": "",
+   "bdm": "bayanne F24033",
+   "marriedTo": "-",
+   "mDate": "-",
+   "mPlace": "-",
+   "sources": "bayanne I9921 child list",
+   "confidence": "Confirmed (compiled)",
+   "notes": "First child born in Lerwick \u2014 family moved ~1850. Name re-uses sister who died 1841 (P57).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  },
+  "P64": {
+   "id": "P64",
+   "name": "Agnes NICOLSON (later JOHNSON)",
+   "fullName": "Agnes NICOLSON (later JOHNSON)",
+   "gen": "4",
+   "sex": "F",
+   "bornShort": "bap. 1 Dec 1771 (OPR register entry, user-read 2026-09-29; bayanne lists birth 5 Dec 1771 \u2014 see notes)",
+   "diedShort": "UNKNOWN (bayanne)",
+   "placeShort": "Hillswick",
+   "diedPlaceShort": "",
+   "father": "John NICOLSON (P50)",
+   "mother": "Ann SIMONSON (P51)",
+   "born": "bap. 1 Dec 1771 (OPR register entry, user-read 2026-09-29; bayanne lists birth 5 Dec 1771 \u2014 see notes)",
+   "birthPlace": "Hillswick, Northmavine, Shetland",
+   "died": "UNKNOWN (bayanne)",
+   "deathPlace": "",
+   "age": "",
+   "burial": "",
+   "occupation": "",
+   "bdm": "OPR index 008/10/43 (ScotlandsPeople, user search 2026-09-29); bayanne F46443",
+   "marriedTo": "",
+   "mDate": "",
+   "mPlace": "",
+   "sources": "OPR Northmavine 008/10/43 (image purchased + read by user 2026-09-29); bayanne F46443",
+   "confidence": "Verified (primary: OPR register image)",
+   "notes": "REGISTER ENTRY (user's own reading of purchased image, 2026-09-29 \u2014 outranks OCR): 'Dec.r 1.st \u2014 John Nicolson & Spouse Ann Simonsdaughter residing in Hillswick had a Daughter baptized by the [Minister] of the parish named Agnes.' PRIMARY CONFIRMATION of the Gen-5 couple + Hillswick address (1771). Note: no birth date in the entry \u2014 only the 1 Dec baptism; bayanne's '5 Dec 1771' birth date is a minor conflict (a birth 4 days AFTER baptism is impossible \u2014 bayanne slip; OPR outranks). Patronymic note: 'Simonsdaughter' = Ann's father was SIMON (Gen-6 lead on her side).",
+   "conflicts": [],
+   "badge": "",
+   "subject": false
+  }
+ },
+ "unions": [
+  {
+   "id": "U1",
+   "partners": [
+    "P50",
+    "P51"
+   ],
+   "gen": 5,
+   "mLabel": "",
+   "children": [
+    {
+     "pid": "P64",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P55",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P48",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U2",
+   "partners": [
+    "P52",
+    "P53"
+   ],
+   "gen": 5,
+   "mLabel": "",
+   "children": [
+    {
+     "pid": "P49",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U3",
+   "partners": [
+    "P48",
+    "P49"
+   ],
+   "gen": 4,
+   "mLabel": "m. 1 Dec 1805 (unverified)",
+   "children": [
+    {
+     "pid": "P44",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P54",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U4",
+   "partners": [
+    "P44",
+    "P45"
+   ],
+   "gen": 3,
+   "mLabel": "m. Nov 1831, Northmavine",
+   "children": [
+    {
+     "pid": "P56",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P57",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P22",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P58",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P59",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P60",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P61",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P62",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P63",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U5",
+   "partners": [
+    "P46",
+    "P47"
+   ],
+   "gen": 3,
+   "mLabel": "m. 14 Mar 1831, Falkirk",
+   "children": [
+    {
+     "pid": "P23",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U6",
+   "partners": [
+    "P27",
+    "P28"
+   ],
+   "gen": 4,
+   "mLabel": "m. 25 Dec 1845, Kidderminster",
+   "children": [
+    {
+     "pid": "P25",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U7",
+   "partners": [
+    "P26"
+   ],
+   "gen": 3,
+   "mLabel": "",
+   "children": [
+    {
+     "pid": "P24",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U8",
+   "partners": [
+    "P29",
+    "P30"
+   ],
+   "gen": 3,
+   "mLabel": "",
+   "children": [
+    {
+     "pid": "P33",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U9",
+   "partners": [
+    "P31",
+    "P32"
+   ],
+   "gen": 3,
+   "mLabel": "",
+   "children": [
+    {
+     "pid": "P34",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U10",
+   "partners": [
+    "P22",
+    "P23"
+   ],
+   "gen": 2,
+   "mLabel": "m. 22 Mar 1858, Green Plains, Navarre VIC",
+   "children": [
+    {
+     "pid": "P18",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U11",
+   "partners": [
+    "P24",
+    "P25"
+   ],
+   "gen": 2,
+   "mLabel": "m. 1871, Gundagai NSW",
+   "children": [
+    {
+     "pid": "P19",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U12",
+   "partners": [
+    "P20",
+    "P21"
+   ],
+   "gen": 1,
+   "mLabel": "m. 21 Oct 1940, Bundarra NSW",
+   "children": [
+    {
+     "pid": "P40",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P39",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U13",
+   "partners": [
+    "P18",
+    "P19"
+   ],
+   "gen": 1,
+   "mLabel": "m. 11 Dec 1898, St Luke's, Junee",
+   "children": [
+    {
+     "pid": "P08",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P09",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P10",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P11",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P06",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P12",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P13",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P07",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P14",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P15",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P16",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U14",
+   "partners": [
+    "P33",
+    "P34"
+   ],
+   "gen": 1,
+   "mLabel": "m. c.1910",
+   "children": [
+    {
+     "pid": "P35",
+     "flag": "likely",
+     "note": ""
+    },
+    {
+     "pid": "P17",
+     "flag": "unproven",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U15",
+   "partners": [
+    "P06",
+    "P17"
+   ],
+   "gen": 0,
+   "mLabel": "m. 25 Apr 1942, Marrickville",
+   "children": [
+    {
+     "pid": "P36",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P37",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U16",
+   "partners": [
+    "P36",
+    "P39"
+   ],
+   "gen": -1,
+   "mLabel": "m. 27 Jan 1968, Concord NSW",
+   "children": [
+    {
+     "pid": "P02",
+     "flag": "",
+     "note": ""
+    },
+    {
+     "pid": "P01",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U17",
+   "partners": [
+    "P37",
+    "P38"
+   ],
+   "gen": -1,
+   "mLabel": "m. 9 Feb 1971",
+   "children": []
+  },
+  {
+   "id": "U18",
+   "partners": [
+    "P40",
+    "P41"
+   ],
+   "gen": -1,
+   "mLabel": "m. 5 Sep 1970, Matraville NSW",
+   "children": []
+  },
+  {
+   "id": "U19",
+   "partners": [
+    "P02",
+    "P42"
+   ],
+   "gen": -1,
+   "mLabel": "m. 27 Feb 2009, Eschols Park NSW",
+   "children": [
+    {
+     "pid": "P03",
+     "flag": "",
+     "note": "father: ? Schonberger (pre-2009)"
+    },
+    {
+     "pid": "P04",
+     "flag": "",
+     "note": "father: ? Schonberger (pre-2009)"
+    },
+    {
+     "pid": "P05",
+     "flag": "",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "U21",
+   "partners": [
+    "P01",
+    "P43"
+   ],
+   "gen": -1,
+   "mLabel": "m. 26 Jul 2014, Darling Harbour",
+   "children": []
+  }
+ ],
+ "genLabels": {
+  "5": "3\u00d7 great-grandparents of Alfred",
+  "4": "2\u00d7 great-grandparents",
+  "3": "Great-grandparents",
+  "2": "Grandparents",
+  "1": "Parents",
+  "0": "Alfred & his generation",
+  "-1": "Children",
+  "-2": "Grandchildren"
+ },
+ "subjectUnion": "U15",
+ "subjectPerson": "P06",
+ "built": "28\u201329 Sep 2026",
+ "count": 64
+};
+/* ================= constants & state ================= */
+const CARD_W=152, CARD_H=100, JOIN=26, MIN_GAP=28, ROW_GAP=104, GUTTER=170, TOP=26;
+const people=DATA.people, unions={}; DATA.unions.forEach(u=>unions[u.id]=u);
+const partnerOf={}; DATA.unions.forEach(u=>u.partners.forEach(p=>partnerOf[p]=u.id));
+const childOf={};  DATA.unions.forEach(u=>u.children.forEach(c=>childOf[c.pid]=u.id));
+const GENS=[5,4,3,2,1,0,-1,-2];
+const rowY={}; GENS.forEach((g,i)=>rowY[g]=TOP+i*(CARD_H+ROW_GAP));
+let collapsed=new Set(), selected=null, matches=[], hlOn=false;
+let tx=0, ty=0, k=1;
+
+/* ================= graph build ================= */
+function leafId(pid){return 'L_'+pid;}
+function nodeGen(n){ return n.kind==='union'? unions[n.id].gen : people[n.pid].gen; }
+function buildNodes(){
+  const nodes={};
+  DATA.unions.forEach(u=>nodes[u.id]={id:u.id,kind:'union',gen:u.gen,
+      w:u.partners.length*CARD_W+(u.partners.length-1)*JOIN, parents:[],children:[]});
+  DATA.unions.forEach(u=>{
+    u.children.forEach(c=>{
+      let cn;
+      if(partnerOf[c.pid]) cn=nodes[partnerOf[c.pid]];
+      else { const lid=leafId(c.pid);
+        if(!nodes[lid]) nodes[lid]={id:lid,kind:'leaf',pid:c.pid,gen:people[c.pid].gen,w:CARD_W,parents:[],children:[]};
+        cn=nodes[lid]; }
+      nodes[u.id].children.push({node:cn,flag:c.flag||'',note:c.note||''});
+      if(!cn.parents.includes(nodes[u.id])) cn.parents.push(nodes[u.id]);
+    });
+  });
+  return nodes;
+}
+const ALL=buildNodes();
+function hiddenSet(){
+  const hid=new Set();
+  const walk=n=>{ n.children.forEach(c=>{ if(!hid.has(c.node.id)){hid.add(c.node.id); walk(c.node);} }); };
+  collapsed.forEach(uid=>walk(ALL[uid]));
+  return hid;
+}
+
+/* ================= layout (barycenter sweeps + relaxation) ================= */
+function layout(){
+  const hid=hiddenSet();
+  const vis=Object.values(ALL).filter(n=>!hid.has(n.id));
+  vis.forEach(n=>{n.x=0;});
+  const rows={}; GENS.forEach(g=>rows[g]=[]);
+  vis.forEach(n=>rows[n.gen].push(n));
+  // init: top-down order by parent barycenter
+  GENS.forEach(g=>{
+    rows[g].forEach(n=>{ const ps=n.parents.filter(p=>!hid.has(p.id));
+      n._b = ps.length? ps.reduce((s,p)=>s+p.x,0)/ps.length : 0; });
+    rows[g].sort((a,b)=>a._b-b._b || a.id.localeCompare(b.id));
+    let cur=0; rows[g].forEach(n=>{ n.x=cur+n.w/2; cur+=n.w+MIN_GAP; });
+  });
+  const place=row=>{ let cur=Math.min(...row.map(n=>n.x-n.w/2));
+    row.forEach(n=>{ n.x=cur+n.w/2; cur+=n.w+MIN_GAP; }); };
+  for(let it=0; it<40; it++){
+    const down=it%2===0;
+    const gs=down?GENS:[...GENS].reverse();
+    gs.forEach(g=>{ const row=rows[g]; if(!row.length)return;
+      row.forEach(n=>{
+        const nb=down? n.parents.filter(p=>!hid.has(p.id))
+                     : n.children.map(c=>c.node).filter(c=>!hid.has(c.id));
+        n._b = nb.length ? nb.reduce((s,p)=>s+p.x,0)/nb.length : n.x; });
+      row.sort((a,b)=>a._b-b._b);
+      place(row);
+    });
+  }
+  // relaxation toward neighbour barycentre (re-sorted each pass → order-safe)
+  for(let it=0; it<70; it++){
+    GENS.forEach(g=>{ const row=rows[g];
+      row.forEach(n=>{
+        const ps=n.parents.filter(p=>!hid.has(p.id)).map(p=>p.x);
+        const cs=n.children.map(c=>c.node).filter(c=>!hid.has(c.id)).map(c=>c.x);
+        let t=null;
+        if(ps.length&&cs.length) t=(ps.reduce((a,b)=>a+b)/ps.length + cs.reduce((a,b)=>a+b)/cs.length)/2;
+        else if(ps.length) t=ps.reduce((a,b)=>a+b)/ps.length;
+        else if(cs.length) t=cs.reduce((a,b)=>a+b)/cs.length;
+        if(t!==null) n.x+=(t-n.x)*0.3;
+      });
+      row.sort((a,b)=>a.x-b.x);
+      for(let i=1;i<row.length;i++){ const a=row[i-1],b=row[i];
+        const need=a.x+a.w/2+MIN_GAP+b.w/2; if(b.x<need)b.x=need; }
+      for(let i=row.length-2;i>=0;i--){ const a=row[i],b=row[i+1];
+        const lim=b.x-b.w/2-MIN_GAP-a.w/2; if(a.x>lim)a.x=lim; }
+    });
+  }
+  // normalise: left edge at GUTTER
+  let minL=Infinity, maxR=-Infinity;
+  vis.forEach(n=>{ minL=Math.min(minL,n.x-n.w/2); maxR=Math.max(maxR,n.x+n.w/2); });
+  const off=GUTTER-minL;
+  vis.forEach(n=>{ n.x+=off; n.y=rowY[n.gen]; });
+  return {vis,rows,width:maxR-minL+GUTTER+40};
+}
+
+/* ================= render ================= */
+const svg=document.getElementById('svg'), vp=document.getElementById('vp');
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){ const e=document.createElementNS(NS,tag);
+  for(const a in attrs)e.setAttribute(a,attrs[a]); parent.appendChild(e); return e; }
+function wrapName(name,max){
+  const words=name.split(' '), lines=[]; let cur='';
+  words.forEach(w=>{ const t=cur?cur+' '+w:w;
+    if(t.length<=max) cur=t; else { if(cur)lines.push(cur); cur=w; } });
+  if(cur)lines.push(cur); return lines.slice(0,2);
+}
+function confColor(c){ return c==='Verified'?'var(--ok)': c==='Likely'?'var(--likely)':'var(--unver)'; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function personCard(g,pid,x,y){
+  const p=people[pid];
+  const grp=el('g',{class:'pcard '+(p.sex==='M'?'m':'f')+(p.subject?' subject':''),transform:`translate(${x},${y})`},g);
+  grp.dataset.pid=pid;
+  const rect=el('rect',{class:'body',x:0,y:0,width:CARD_W,height:CARD_H,rx:8},grp);
+  el('rect',{x:0,y:0,width:4,height:CARD_H,rx:2,fill:p.sex==='M'?'var(--male)':'var(--female)'},grp);
+  el('circle',{cx:CARD_W-11,cy:11,r:4,fill:confColor(p.confidence)},grp)
+    .appendChild(document.createElementNS(NS,'title')).textContent='Confidence: '+p.confidence;
+  if(p.conflicts.length) el('text',{x:CARD_W-22,y:14,'font-size':9,fill:'var(--likely)','font-weight':700},grp)
+    .textContent='⚑'+p.conflicts.length;
+  const lines=wrapName(p.name,20);
+  lines.forEach((ln,i)=>el('text',{class:'pname',x:10,y:17+i*13,'font-size':p.name.length>26?11:12},grp).textContent=ln);
+  let my=17+lines.length*13+4;
+  const b='b. '+p.bornShort+(p.placeShort?' · '+p.placeShort:'');
+  if(p.bornShort) el('text',{class:'pmeta',x:10,y:my},grp).textContent=b, my+=12;
+  if(p.diedShort){ el('text',{class:'pmeta',x:10,y:my},grp)
+      .textContent='d. '+p.diedShort+(p.diedPlaceShort?' · '+p.diedPlaceShort:''); my+=12; }
+  if(p.badge&&my<CARD_H-6) el('text',{class:'pbadge',x:10,y:my},grp).textContent=p.badge.slice(0,30);
+  grp.addEventListener('click',ev=>{ev.stopPropagation(); selectPerson(pid);});
+  return grp;
+}
+
+let layoutInfo=null, nodeGroups={}, edgeGroups=[];
+function render(){
+  vp.innerHTML=''; nodeGroups={}; edgeGroups=[];
+  layoutInfo=layout();
+  const {vis}=layoutInfo;
+  const hid=hiddenSet();
+  const edgeLayer=el('g',{},vp), nodeLayer=el('g',{},vp);
+  /* --- edges: one sibship junction per union --- */
+  vis.filter(n=>n.kind==='union').forEach(u=>{
+    const kids=u.children.filter(c=>!hid.has(c.node.id));
+    const U=unions[u.id];
+    const cx=u.x;
+    // drop starts below the marriage label if the couple has one
+    const bottom=u.y+CARD_H+(U.mLabel&&U.partners.length===2?18:0);
+    const barY=u.y+CARD_H+ROW_GAP*0.42;
+    const hasToggle=U.children.length>0;
+    if(!kids.length){ if(hasToggle) drawToggle(u,cx,u.y+CARD_H+6,true,0); return; }
+    const grp=el('g',{class:'eg'},edgeLayer); edgeGroups.push({grp,union:u.id,kids:kids.map(c=>c.node.id)});
+    let d=`M ${cx} ${bottom} V ${barY}`;
+    const xs=kids.map(c=>c.node.x);
+    const x0=Math.min(...xs), x1=Math.max(...xs);
+    if(x1-x0>1) d+=` M ${x0} ${barY} H ${x1}`;
+    el('path',{class:'edge',d},grp);
+    kids.forEach(c=>{
+      const tick=el('path',{class:'edge'+(c.flag?' flag':''),d:`M ${c.node.x} ${barY} V ${c.node.y}`},grp);
+      if(c.flag==='unproven') tick.appendChild(document.createElementNS(NS,'title')).textContent='Unproven parentage — see Conflicts sheet';
+    });
+    if(hasToggle) drawToggle(u,cx,barY,collapsed.has(u.id),descCount(u));
+  });
+  /* --- nodes --- */
+  vis.forEach(n=>{
+    const g=el('g',{class:'node',transform:`translate(${n.x-n.w/2},${n.y})`},nodeLayer);
+    nodeGroups[n.id]={g,node:n};
+    if(n.kind==='leaf'){ personCard(g,n.pid,0,0); }
+    else{
+      const U=unions[n.id];
+      U.partners.forEach((pid,i)=>personCard(g,pid,i*(CARD_W+JOIN),0));
+      if(U.partners.length===2){
+        const jx=CARD_W+JOIN/2;
+        el('circle',{cx:jx,cy:CARD_H/2-4,r:6.5,fill:'#fbf8ef',stroke:'#b39b6b','stroke-width':1.2},g);
+        el('text',{x:jx,y:CARD_H/2-1,'font-size':8.5,'text-anchor':'middle',fill:'#a2834a'},g).textContent='❤';
+        if(U.mLabel) el('text',{class:'mlink',x:n.w/2,y:CARD_H+13,'text-anchor':'middle'},g).textContent=U.mLabel;
+      }
+    }
+  });
+  applyHL(); updateGutter(); fit(false);
+}
+function descCount(u){ const h=new Set(); const w=n=>n.children.forEach(c=>{if(!h.has(c.node.id)){h.add(c.node.id);w(c.node);}});
+  w(ALL[u.id]); let people_ct=0; h.forEach(id=>{ const n=ALL[id];
+    people_ct+= n.kind==='union'? unions[n.id].partners.length : 1; }); return people_ct; }
+function drawToggle(u,cx,y,isCollapsed,count){
+  const t=el('g',{class:'tog',transform:`translate(${cx},${y})`},vp);
+  el('circle',{cx:0,cy:0,r:isCollapsed?10:8},t);
+  el('text',{x:0,y:isCollapsed?3.5:3},t).textContent=isCollapsed?'+':'−';
+  if(isCollapsed&&count) el('text',{class:'cnt',x:14,y:3},t).textContent=count+' hidden';
+  t.addEventListener('click',ev=>{ ev.stopPropagation();
+    collapsed.has(u.id)?collapsed.delete(u.id):collapsed.add(u.id); render(); });
+}
+
+/* ================= pan / zoom ================= */
+function applyT(){ vp.setAttribute('transform',`translate(${tx},${ty}) scale(${k})`); updateGutter(); }
+function fit(anim=true){
+  if(!layoutInfo)return;
+  const r=svg.getBoundingClientRect();
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  layoutInfo.vis.forEach(n=>{ x0=Math.min(x0,n.x-n.w/2); y0=Math.min(y0,n.y);
+    x1=Math.max(x1,n.x+n.w/2); y1=Math.max(y1,n.y+CARD_H+18); });
+  const bw=x1-x0, bh=y1-y0;
+  k=Math.min((r.width-40)/bw,(r.height-40)/bh,1.5);
+  tx=(r.width-bw*k)/2-x0*k; ty=(r.height-bh*k)/2-y0*k+10;
+  applyT();
+}
+function zoomAt(mx,my,f){ const k2=Math.min(3,Math.max(.15,k*f));
+  tx=mx-(mx-tx)*(k2/k); ty=my-(my-ty)*(k2/k); k=k2; applyT(); }
+svg.addEventListener('wheel',ev=>{ ev.preventDefault();
+  zoomAt(ev.clientX,ev.clientY-66, ev.deltaY<0?1.12:0.89); },{passive:false});
+let drag=null, pinchD=null;
+const pts=new Map();
+svg.addEventListener('pointerdown',ev=>{
+  pts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  if(pts.size===1){ drag={x:ev.clientX,y:ev.clientY}; svg.classList.add('panning'); }
+  else { drag=null; pinchD=null; }
+  if(svg.setPointerCapture){ try{ svg.setPointerCapture(ev.pointerId); }catch(e){} }
+});
+window.addEventListener('pointermove',ev=>{
+  if(!pts.has(ev.pointerId)){ return; }
+  pts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  if(pts.size===2){
+    const [a,b]=[...pts.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y);
+    if(pinchD) zoomAt((a.x+b.x)/2,(a.y+b.y)/2-66, d/pinchD);
+    pinchD=d;
+  } else if(drag){
+    tx+=ev.clientX-drag.x; ty+=ev.clientY-drag.y; drag={x:ev.clientX,y:ev.clientY}; applyT();
+  }
+});
+function endPointer(ev){ pts.delete(ev.pointerId); pinchD=null;
+  if(!pts.size){ drag=null; svg.classList.remove('panning'); } }
+window.addEventListener('pointerup',endPointer);
+window.addEventListener('pointercancel',endPointer);
+document.getElementById('zoomIn').onclick=()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,1.3); };
+document.getElementById('zoomOut').onclick=()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,.77); };
+document.getElementById('fit').onclick=()=>fit();
+window.addEventListener('resize',()=>fit(false));
+
+/* ================= gen gutter ================= */
+function updateGutter(){
+  const gut=document.getElementById('gutter'); gut.innerHTML='';
+  if(!layoutInfo)return;
+  GENS.forEach(g=>{
+    if(!layoutInfo.rows[g]||!layoutInfo.rows[g].length)return;
+    const y=ty+rowY[g]*k+CARD_H*k/2;
+    if(y<-20||y>innerHeight+20)return;
+    const d=document.createElement('div'); d.className='genlab'; d.style.top=(y+66-8)+'px';
+    d.innerHTML=`<b>${esc(DATA.genLabels[String(g)]||'')}</b>gen ${g>0?'+':''}${g}`;
+    gut.appendChild(d);
+  });
+}
+
+/* ================= detail panel ================= */
+const panel=document.getElementById('panel');
+function row(k,v){ return v?`<div class="prow"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`:''; }
+function chip(pid,label){ return `<span class="chip" data-pid="${pid}">${esc(label||people[pid].name)}</span>`; }
+function selectPerson(pid){
+  selected=pid; const p=people[pid];
+  document.getElementById('pname').textContent=p.fullName;
+  document.getElementById('ppid').textContent=p.id+' · gen '+(p.gen>0?'+':'')+p.gen;
+  const cc=p.confidence==='Verified'?'var(--ok)':p.confidence==='Likely'?'var(--likely)':'var(--unver)';
+  document.getElementById('pconf').innerHTML=
+    `<span class="confpill" style="background:${cc}">${esc(p.confidence)}</span>`+
+    (p.subject?' <span class="confpill" style="background:var(--gold)">★ Subject of this tree</span>':'');
+  let h='<div class="psec">Facts</div>';
+  h+=row('Born',p.born+(p.birthPlace?' — '+p.birthPlace:''));
+  h+=row('Died',p.died+(p.deathPlace?' — '+p.deathPlace:''));
+  h+=row('Age at death',p.age); h+=row('Burial',p.burial); h+=row('Occupation',p.occupation);
+  h+=row('Father',p.father); h+=row('Mother',p.mother);
+  h+=row('Married',p.marriedTo&&p.marriedTo!=='None'?[p.marriedTo,p.mDate,p.mPlace].filter(Boolean).join(' · '):'');
+  h+=row('BDM reg',p.bdm);
+  if(p.badge) h+=`<div class="warn">${esc(p.badge)}</div>`;
+  if(p.conflicts.length) h+=`<div class="warn">⚑ See workbook Conflicts sheet ${p.conflicts.map(c=>'#'+c).join(', ')}</div>`;
+  h+='<div class="psec">Family</div>';
+  const myU=partnerOf[pid], parU=childOf[pid];
+  if(parU){ h+='<div style="margin:2px 0">Parents: '+unions[parU].partners.map(pp=>chip(pp)).join(' ')+'</div>';
+    const sibs=unions[parU].children.filter(c=>c.pid!==pid);
+    if(sibs.length) h+='<div style="margin:2px 0">Siblings: '+sibs.map(c=>chip(c.pid)).join(' ')+'</div>'; }
+  if(myU){ const sp=unions[myU].partners.filter(x=>x!==pid);
+    if(sp.length) h+='<div style="margin:2px 0">Spouse: '+sp.map(chip).join(' ')+'</div>';
+    const ch=unions[myU].children;
+    if(ch.length) h+='<div style="margin:2px 0">Children: '+ch.map(c=>chip(c.pid)).join(' ')+'</div>'; }
+  if(p.notes){ h+='<div class="psec">Notes</div><div>'+esc(p.notes)+'</div>'; }
+  if(p.sources){ h+='<div class="psec">Sources</div><div class="src">'+esc(p.sources)+'</div>'; }
+  document.getElementById('pbody').innerHTML=h;
+  panel.classList.add('open');
+  document.querySelectorAll('#pbody .chip').forEach(c=>c.onclick=()=>{ selectPerson(c.dataset.pid); centerOn(c.dataset.pid); });
+}
+document.getElementById('pclose').onclick=()=>panel.classList.remove('open');
+function centerOn(pid){
+  const nid=partnerOf[pid]||leafId(pid); const ng=nodeGroups[nid]; if(!ng)return;
+  const r=svg.getBoundingClientRect(); k=Math.max(k,1);
+  tx=r.width/2-ng.node.x*k; ty=r.height/2-ng.node.y*k; applyT();
+}
+
+/* ================= search ================= */
+const searchEl=document.getElementById('search');
+function doSearch(){
+  const q=searchEl.value.trim().toLowerCase(); matches=[];
+  Object.values(nodeGroups).forEach(({g,node})=>{
+    let hit=false;
+    if(q){ const pids=node.kind==='leaf'?[node.pid]:unions[node.id].partners;
+      hit=pids.some(pid=>people[pid].fullName.toLowerCase().includes(q));
+      if(hit)matches.push(node.id); }
+    g.classList.toggle('match',hit);
+  });
+  document.getElementById('matchCt').textContent=q?matches.length:'';
+}
+searchEl.addEventListener('input',doSearch);
+searchEl.addEventListener('keydown',ev=>{ if(ev.key==='Enter'&&matches.length){
+  const n=ALL[matches[0]]; const pid=n.kind==='leaf'?n.pid:unions[n.id].partners[0];
+  selectPerson(pid); centerOn(pid); }});
+document.addEventListener('keydown',ev=>{ if(ev.key==='/'&&document.activeElement!==searchEl){
+  ev.preventDefault(); searchEl.focus(); }});
+
+/* ================= highlight Alfred's line ================= */
+function lineSet(){
+  const keep=new Set([DATA.subjectUnion]);
+  const up=n=>n.parents.forEach(p=>{ if(!keep.has(p.id)){keep.add(p.id);up(p);} });
+  const dn=n=>n.children.forEach(c=>{ if(!keep.has(c.node.id)){keep.add(c.node.id);dn(c.node);} });
+  up(ALL[DATA.subjectUnion]); dn(ALL[DATA.subjectUnion]); return keep;
+}
+function applyHL(){
+  vp.classList.toggle('hl',hlOn);
+  if(!hlOn)return;
+  const keep=lineSet();
+  Object.entries(nodeGroups).forEach(([id,ng])=>ng.g.classList.toggle(keep.has(id)?'keepnode':'dim',true));
+  edgeGroups.forEach(eg=>eg.grp.classList.toggle('keep',keep.has(eg.union)));
+}
+document.getElementById('btnLine').onclick=ev=>{ hlOn=!hlOn;
+  ev.currentTarget.classList.toggle('on',hlOn); applyHL(); };
+document.getElementById('btnExpand').onclick=()=>{ collapsed.clear(); render(); };
+document.getElementById('btnCollapse').onclick=()=>{
+  collapsed=new Set(DATA.unions.filter(u=>u.children.length&&u.id!==DATA.subjectUnion).map(u=>u.id));
+  render(); };
+svg.addEventListener('click',()=>panel.classList.remove('open'));
+
+/* ================= go ================= */
+document.getElementById('subline').textContent=
+  `Descendants & ancestors of Alfred Henry Johnston (1910–1999) · ${DATA.count} people · 8 generations · Junee → Shetland → Kidderminster`;
+render();
+selectPerson(DATA.subjectPerson);
+</script>
+</body>
+</html>
